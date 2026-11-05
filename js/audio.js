@@ -75,16 +75,6 @@
     }
 
     /* ---------- Kontrol musik ---------- */
-    function ui() {
-        const b = SC.$("#musicBtn");
-        if (!b) return;
-        b.classList.toggle("is-on", playing);
-        b.setAttribute("aria-pressed", String(playing));
-        b.setAttribute("aria-label", playing ? "Jeda musik" : "Putar musik");
-        const l = SC.$("#musicLabel");
-        if (l) l.textContent = playing ? "Musik" : "Jeda";
-    }
-
     function fallback() {
         useSynth = true;
         if (playing) startSynth();
@@ -92,12 +82,12 @@
 
     function play() {
         ac();
-        if (useSynth) { playing = true; startSynth(); ui(); return; }
-        playing = true; ui();
+        if (useSynth) { playing = true; startSynth(); return; }
+        playing = true;
         const p = bgm.play();
         if (p && p.catch) {
             p.catch((err) => {
-                if (err && err.name === "NotAllowedError") { playing = false; ui(); }
+                if (err && err.name === "NotAllowedError") { playing = false; }
                 else fallback();
             });
         }
@@ -107,7 +97,6 @@
         playing = false;
         if (bgm) bgm.pause();
         stopSynth();
-        ui();
     }
 
     function toggle() { playing ? pause() : play(); }
@@ -119,9 +108,6 @@
         bgm.volume = 0.7;
         bgm.addEventListener("error", fallback);
         bgm.src = SRC;
-        const b = SC.$("#musicBtn");
-        if (b) b.addEventListener("click", toggle);
-        ui();
         // hemat baterai: jeda saat tab disembunyikan, lanjut saat kembali
         let wasPlaying = false;
         document.addEventListener("visibilitychange", () => {

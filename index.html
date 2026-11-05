@@ -35,9 +35,6 @@
         <symbol id="i-close" viewBox="0 0 24 24">
             <path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
         </symbol>
-        <symbol id="i-plus" viewBox="0 0 24 24">
-            <path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M12 5v14M5 12h14"/>
-        </symbol>
         <symbol id="i-cam" viewBox="0 0 24 24">
             <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
             <circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -114,7 +111,7 @@
                             </div>
                             <div>
                                 <dt>FLIGHT</dt>
-                                <dd>LRN001</dd>
+                                <dd>KRWC001</dd>
                             </div>
                             <div>
                                 <dt>GATE</dt>
@@ -156,57 +153,71 @@
     </section>
 
     <!-- =====================================================================
-         NAVIGASI ATAS / TAB BAWAH
+         HEADER MODEL TIKET "STAR CHAMPS ★ AIR" (TANPA LOGO MUSIK)
     ====================================================================== -->
-    <header class="nav" role="navigation" aria-label="Navigasi Utama">
-        <a href="#top" class="nav__brand" onclick="event.preventDefault()">
-            STAR CHAMPS <svg aria-hidden="true"><use href="#i-star"/></svg> AIR
-        </a>
-
-        <div class="nav__steps">
-            <button type="button" data-nav="ucapan" aria-current="page">
-                <span>01</span> Ucapan
-            </button>
-            <button type="button" data-nav="doa">
-                <span>02</span> Doa Staf
-            </button>
-            <button type="button" data-nav="harapan">
-                <span>03</span> Harapan
-            </button>
-            <button type="button" data-nav="photobooth">
-                <span>04</span> Photobooth
-            </button>
+    <header class="nav-ticket" role="banner">
+        <div class="nav-ticket__sky">
+            <span class="nav-ticket__brand">
+                STAR CHAMPS <svg aria-hidden="true"><use href="#i-star"/></svg> AIR
+            </span>
+            <span class="nav-ticket__corridor">
+                ALSUT <svg aria-hidden="true"><use href="#i-plane-h"/></svg> KARAWACI
+            </span>
         </div>
-
-        <button id="musicBtn" type="button" class="music" aria-pressed="false" aria-label="Putar musik">
-            <span class="music__disc" aria-hidden="true"></span>
-            <span class="music__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-            <span id="musicLabel" class="music__label">Musik</span>
-        </button>
+        <div class="nav-ticket__navy">
+            <span class="nav-ticket__code">
+                ALST <svg aria-hidden="true"><use href="#i-plane-h"/></svg> KRWC
+            </span>
+            <div class="nav-ticket__meta">
+                <span class="nav-ticket__pill">HBD MS. ANGELA</span>
+                <span>03 NOV</span>
+            </div>
+        </div>
     </header>
 
     <!-- =====================================================================
-         KONTEN UTAMA (4 HALAMAN)
+         FOOTER STEP DOCK (TERSEMBUNYI DARI AWAL, MUNCUL DI AKHIR)
+    ====================================================================== -->
+    <nav id="stepDock" class="step-dock" aria-label="Navigasi Halaman" hidden>
+        <button type="button" data-nav="ucapan" aria-current="page">
+            <span>01</span> Ucapan
+        </button>
+        <button type="button" data-nav="doa">
+            <span>02</span> Doa Staf
+        </button>
+        <button type="button" data-nav="harapan">
+            <span>03</span> Harapan
+        </button>
+        <button type="button" data-nav="photobooth">
+            <span>04</span> Photobooth
+        </button>
+    </nav>
+
+    <!-- =====================================================================
+         KONTEN UTAMA (4 HALAMAN BERURUTAN)
     ====================================================================== -->
     <main id="top" class="app">
 
         <!-- =================================================================
-             HALAMAN 1: UCAPAN & DOA PEMBUKA
+             HALAMAN 1: UCAPAN & DOA PEMBUKA (MOBILE-FRIENDLY & MUDAH DIBACA)
         ================================================================== -->
         <section class="page is-active" data-page="ucapan" aria-labelledby="title-ucapan">
-            <div class="hero">
+            <div class="hero-card">
                 <div class="hero__copy">
-                    <span class="eyebrow">FLIGHT LRN001 &middot; 03 NOV</span>
+                    <span class="hero__badge">
+                        <svg aria-hidden="true"><use href="#i-star"/></svg>
+                        <span>STAR CHAMPS &middot; 03 NOVEMBER</span>
+                    </span>
                     <h1 id="title-ucapan" class="hero__title">
-                        Selamat<br>Ulang Tahun,
+                        Selamat<br>Ulang Tahun,<br>
                         <em>Ms. Angela</em>
                     </h1>
                     <p class="hero__lead">
                         Hari spesial buat sosok yang selalu sabar mendampingi tumbuh kembang anak-anak dan menyatukan keluarga besar <strong>Star Champs</strong>.
                     </p>
-                    <div class="hero__meta">
+                    <div class="hero__tags">
                         <span class="stamp">ALSUT &#9992; KARAWACI</span>
-                        <span class="stamp">GATE 01 &middot; SEAT 01L</span>
+                        <span class="stamp">KELUARGA BESAR STAR CHAMPS</span>
                     </div>
                 </div>
 
@@ -214,7 +225,6 @@
                 <div class="photo">
                     <span class="tape" aria-hidden="true"></span>
                     <img class="sticker sticker--a" src="assets/stickers/asterisk-navy.png" alt="" aria-hidden="true">
-                    <img class="sticker sticker--b" src="assets/stickers/bolt.png" alt="" aria-hidden="true">
                     <img class="sticker sticker--c" src="assets/stickers/plane.png" alt="" aria-hidden="true">
 
                     <div id="photoCard" class="photo__card">
@@ -252,22 +262,22 @@
             <div class="pager">
                 <span></span>
                 <button type="button" class="btn" data-goto="doa">
-                    <span>Lihat Doa Staf</span>
+                    <span>Lanjut ke Doa Staf</span>
                     <span>&rarr;</span>
                 </button>
             </div>
         </section>
 
         <!-- =================================================================
-             HALAMAN 2: KOLASE 2 KOLOM DOA 11 STAF
+             HALAMAN 2: KOLASE 2 KOLOM AMPLOP SURAT 11 STAF (TERTUTUP)
         ================================================================== -->
         <section class="page" data-page="doa" aria-labelledby="title-doa">
             <header class="page__head">
                 <span class="eyebrow">11 SURAT DARI TIM STAR CHAMPS</span>
-                <h2 id="title-doa" class="section-title">Kolase Doa &amp; Ucapan Staf</h2>
+                <h2 id="title-doa" class="section-title">Kolase Surat &amp; Doa Staf</h2>
             </header>
 
-            <!-- Kolase 2 baris kolom menurun ke bawah -->
+            <!-- Kolase 2 baris kolom menurun ke bawah (amplop tertutup tanpa bocoran teks) -->
             <div class="collage">
                 <div id="colLeft" class="collage__col"></div>
                 <div id="colRight" class="collage__col"></div>
@@ -283,73 +293,83 @@
         </section>
 
         <!-- =================================================================
-             HALAMAN 3: HARAPAN BERSAMA & TIUP LILIN
+             HALAMAN 3: HARAPAN BERSAMA & TIUP LILIN (DRAMATIS & BERKESAN)
         ================================================================== -->
         <section class="page" data-page="harapan" aria-labelledby="title-harapan">
-            <header class="page__head">
-                <span class="eyebrow">REKAN STAF &amp; MANAJEMEN STAR CHAMPS</span>
-                <h2 id="title-harapan" class="section-title">Harapan Kami Bersama Ms. Angela</h2>
-            </header>
+            <div class="wishes-stage">
+                <div class="wishes-stage__rays" aria-hidden="true"></div>
 
-            <div class="wishes">
-                <article class="wishes__letter ruled">
-                    <span class="tape" aria-hidden="true"></span>
-                    <div id="wishesBody"></div>
-                </article>
+                <header class="wishes-stage__head">
+                    <span class="wishes-stage__badge">
+                        <svg aria-hidden="true" width="12" height="12"><use href="#i-star"/></svg>
+                        <span>REKAN STAF &amp; MANAJEMEN STAR CHAMPS</span>
+                    </span>
+                    <h2 id="title-harapan" class="wishes-stage__title">
+                        Harapan Kami Bersama <span>Ms. Angela</span>
+                    </h2>
+                    <p class="wishes-stage__sub">Small steps still move you forward</p>
+                </header>
 
-                <aside id="cakeBox" class="cake" aria-label="Kue Ulang Tahun Interaktif">
-                    <svg class="cake__svg" viewBox="0 0 200 200" aria-hidden="true">
-                        <ellipse cx="100" cy="174" rx="78" ry="12" fill="#80b8f3" opacity=".45"/>
-                        <rect x="42" y="116" width="116" height="52" rx="12" fill="#b2d4ff" stroke="#001a3d" stroke-width="3"/>
-                        <path d="M42 122 Q58 140 72 122 Q86 140 100 122 Q114 140 128 122 Q142 140 158 122 L158 116 L42 116 Z" fill="#ffffff"/>
-                        <rect x="58" y="78" width="84" height="40" rx="10" fill="#ffffff" stroke="#001a3d" stroke-width="3"/>
-                        <path d="M58 84 Q72 98 86 84 Q100 98 114 84 Q128 98 142 84 L142 78 L58 78 Z" fill="#80b8f3"/>
-                        <rect x="94" y="44" width="12" height="34" rx="4" fill="#ffc857" stroke="#001a3d" stroke-width="2.5"/>
-                        <g class="cake__flame">
-                            <path d="M100 18 C109 28 110 39 100 44 C90 39 91 28 100 18 Z" fill="#ff9f1c"/>
-                            <path d="M100 25 C104 31 105 37 100 41 C95 37 96 31 100 25 Z" fill="#fff3B0"/>
-                        </g>
-                        <g class="cake__smoke">
-                            <circle cx="100" cy="36" r="5" fill="#b2d4ff"/>
-                            <circle cx="106" cy="24" r="7" fill="#b2d4ff"/>
-                            <circle cx="96" cy="12" r="6" fill="#b2d4ff"/>
-                        </g>
-                    </svg>
-                    <h3 class="cake__title">Make a Wish, Ms. Angela</h3>
-                    <p id="cakeHint" class="cake__hint">Ketuk kue atau tombol di bawah untuk tiup lilin</p>
-                    <button id="blowBtn" type="button" class="btn btn--sky">
-                        <svg aria-hidden="true"><use href="#i-star"/></svg>
-                        <span>Tiup Lilin &amp; Rayakan</span>
-                    </button>
-                </aside>
-            </div>
+                <div class="wishes">
+                    <article class="wishes__letter">
+                        <div id="wishesBody"></div>
+                    </article>
 
-            <div id="unlockBanner" class="unlock">
-                <div>
-                    <strong>Lanjut Sesi Foto di Photobooth Star Champs Air</strong>
-                    <span>Ambil 3 pose foto langsung ke dalam frame boarding pass resmi.</span>
+                    <aside id="cakeBox" class="cake" aria-label="Kue Ulang Tahun Interaktif">
+                        <div class="cake__glow" aria-hidden="true"></div>
+                        <svg class="cake__svg" viewBox="0 0 200 200" aria-hidden="true">
+                            <ellipse cx="100" cy="174" rx="78" ry="12" fill="#80b8f3" opacity=".45"/>
+                            <rect x="42" y="116" width="116" height="52" rx="12" fill="#b2d4ff" stroke="#001a3d" stroke-width="3"/>
+                            <path d="M42 122 Q58 140 72 122 Q86 140 100 122 Q114 140 128 122 Q142 140 158 122 L158 116 L42 116 Z" fill="#ffffff"/>
+                            <rect x="58" y="78" width="84" height="40" rx="10" fill="#ffffff" stroke="#001a3d" stroke-width="3"/>
+                            <path d="M58 84 Q72 98 86 84 Q100 98 114 84 Q128 98 142 84 L142 78 L58 78 Z" fill="#80b8f3"/>
+                            <rect x="94" y="44" width="12" height="34" rx="4" fill="#ffc857" stroke="#001a3d" stroke-width="2.5"/>
+                            <g class="cake__flame">
+                                <path d="M100 18 C109 28 110 39 100 44 C90 39 91 28 100 18 Z" fill="#ff9f1c"/>
+                                <path d="M100 25 C104 31 105 37 100 41 C95 37 96 31 100 25 Z" fill="#fff3B0"/>
+                            </g>
+                            <g class="cake__smoke">
+                                <circle cx="100" cy="36" r="5" fill="#b2d4ff"/>
+                                <circle cx="106" cy="24" r="7" fill="#b2d4ff"/>
+                                <circle cx="96" cy="12" r="6" fill="#b2d4ff"/>
+                            </g>
+                        </svg>
+                        <h3 class="cake__title">Make a Wish, Ms. Angela</h3>
+                        <p id="cakeHint" class="cake__hint">Ketuk kue atau tombol di bawah untuk tiup lilin</p>
+                        <button id="blowBtn" type="button" class="btn btn--sky">
+                            <svg aria-hidden="true"><use href="#i-star"/></svg>
+                            <span>Tiup Lilin &amp; Rayakan</span>
+                        </button>
+                    </aside>
                 </div>
-                <button type="button" class="btn" data-goto="photobooth">
-                    <span>Buka Photobooth</span>
-                    <span>&rarr;</span>
-                </button>
+
+                <div id="unlockBanner" class="unlock">
+                    <div>
+                        <strong>Lanjut Sesi Foto di Photobooth Star Champs Air</strong>
+                        <span>Ambil 3 pose foto langsung masuk ke dalam frame boarding pass resmi.</span>
+                    </div>
+                    <button type="button" class="btn" data-goto="photobooth">
+                        <span>Buka Photobooth</span>
+                        <span>&rarr;</span>
+                    </button>
+                </div>
             </div>
 
             <div class="pager">
                 <button type="button" class="btn btn--ghost" data-goto="doa">&larr; Doa Staf</button>
                 <button type="button" class="btn" data-goto="photobooth">
-                    <span>Ke Photobooth</span>
+                    <span>Lanjut ke Photobooth</span>
                     <span>&rarr;</span>
                 </button>
             </div>
         </section>
 
         <!-- =================================================================
-             HALAMAN 4: PHOTOBOOTH "STAR CHAMPS ★ AIR"
+             HALAMAN 4: PHOTOBOOTH "STAR CHAMPS ★ AIR" (FLIGHT KRWC001)
         ================================================================== -->
         <section id="booth" class="page" data-page="photobooth" aria-labelledby="title-booth">
             <header class="page__head">
-                <span class="eyebrow">STAR CHAMPS &#9733; AIR &middot; FLIGHT LRN001</span>
+                <span class="eyebrow">STAR CHAMPS &#9733; AIR &middot; FLIGHT KRWC001</span>
                 <h2 id="title-booth" class="section-title">Photobooth Ms. Angela</h2>
             </header>
 
@@ -359,7 +379,7 @@
                     <div class="booth__box">
                         <div class="booth__label">
                             <span>KAMERA SESI FOTO</span>
-                            <b>3 POSE OTOMATIS</b>
+                            <b>LANGSUNG MASUK FRAME</b>
                         </div>
 
                         <div id="vf" class="vf" data-filter="normal">
@@ -374,7 +394,7 @@
                             <span class="vf__corner tr" aria-hidden="true"></span>
                             <span class="vf__corner bl" aria-hidden="true"></span>
                             <span class="vf__corner br" aria-hidden="true"></span>
-                            <span id="vfChip" class="vf__chip">Foto 1 / 3</span>
+                            <span id="vfChip" class="vf__chip">Pose 1 / 3</span>
 
                             <div id="vfCount" class="vf__count" aria-live="polite">
                                 <span>3</span>
@@ -393,7 +413,7 @@
                             </button>
                             <button id="btnShot" type="button" class="btn btn--sky" hidden>
                                 <svg aria-hidden="true"><use href="#i-cam"/></svg>
-                                <span>Ambil 1 foto</span>
+                                <span>Jepret Pose 1</span>
                             </button>
                             <button id="btnFlip" type="button" class="btn btn--ghost" hidden>
                                 <svg aria-hidden="true"><use href="#i-flip"/></svg>
@@ -410,7 +430,7 @@
                     <!-- Tray 3 Pose -->
                     <div class="booth__box">
                         <div class="booth__label">
-                            <span>SLOT POSE (KETUK UNTUK GANTI PER SLOT)</span>
+                            <span>SLOT POSE (KETUK UNTUK PILIH / GANTI)</span>
                             <button id="btnReset" type="button" class="chip">Reset Semua</button>
                         </div>
                         <div class="tray">
@@ -447,7 +467,7 @@
                     </div>
                 </div>
 
-                <!-- Preview Hasil Frame Star Champs Air -->
+                <!-- Preview Langsung di Dalam Frame Star Champs Air -->
                 <div class="preview">
                     <div class="preview__sheet">
                         <canvas id="previewCanvas" class="preview__canvas" width="1080" height="1620"></canvas>
@@ -503,32 +523,6 @@
                 <button id="skipTypeBtn" type="button" class="chip btn--skip">Lewati Ketik</button>
                 <button id="nextLetter" type="button" class="btn btn--sm">Berikutnya &rarr;</button>
             </div>
-        </div>
-    </div>
-
-    <!-- =====================================================================
-         MODAL: TAMBAH SURAT DOA BARU
-    ====================================================================== -->
-    <div id="addModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="addTitle">
-        <div class="modal__card">
-            <div class="modal__bar">
-                <span class="mono">TAMBAH SURAT DOA</span>
-                <button id="closeAddModal" type="button" class="modal__close" aria-label="Tutup formulir">
-                    <svg aria-hidden="true"><use href="#i-close"/></svg>
-                </button>
-            </div>
-            <form id="addForm" class="form">
-                <h3 id="addTitle" class="modal__name">Tulis Ucapan Buat Ms. Angela</h3>
-                <div class="field">
-                    <label for="addName">Nama Panggilan</label>
-                    <input id="addName" type="text" placeholder="Contoh: Miss Rina" required>
-                </div>
-                <div class="field">
-                    <label for="addMessage">Ucapan &amp; Doa</label>
-                    <textarea id="addMessage" placeholder="Tulis doa dan ucapan untuk Ms. Angela..." required></textarea>
-                </div>
-                <button type="submit" class="btn">Simpan ke Kolase</button>
-            </form>
         </div>
     </div>
 

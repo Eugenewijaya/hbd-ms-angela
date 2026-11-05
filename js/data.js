@@ -1,6 +1,5 @@
 /* ==========================================================================
-   data.js — konten: surat 11 staf, catatan pembuka, surat harapan
-   Teks mengikuti versi asli; kata "sayang/tersayang" sudah dihapus.
+   data.js — konten: catatan pembuka, 11 surat staf, dan harapan bersama
    ========================================================================== */
 (function () {
     const SC = (window.SC = window.SC || {});
@@ -50,7 +49,7 @@
             message: "Selamat ulang tahun Ms. Angela! 🎉 Doa dari Aa Daus semoga Ms. Angela selalu diberikan kesehatan lahir batin, dipanjangkan umurnya dalam keberkahan, dan dimudahkan segala urusannya. Terima kasih banyak ya Ms karena selama ini selalu ramah, baik banget, dan menghargai kami semua tanpa pandang bulu di Star Champs. Semoga kebaikan Ms. Angela dibalas berlipat ganda oleh Tuhan Yang Maha Esa. Amin!"
         },
         {
-            author: "Teyana",
+            author: "Teh Yana",
             message: "Happy level up day Ms. Angela! 🌷✨ Makasih banyak ya Ms karena udah bikin Star Champs terasa kayak rumah kedua buat kita semua. Ms. Angela tuh selalu punya cara lembut buat ngingetin dan nyemangatin kita kalau lagi ada hal yang kurang pas, jadi kita semua semangat buat terus belajar jadi lebih baik. Semoga tahun ini membawa banyak kejutan manis, rezeki yang lancar, dan hati yang selalu gembira buat Ms. Angela!"
         },
         {
@@ -58,7 +57,7 @@
             message: "Selamat ulang tahun ya Ms. Angela! 🎂 Doa Teh Nabila buat Ms. Angela semoga sehat selalu, makin sukses, dan selalu dalam lindungan-Nya. Senang banget bisa kenal dan kerja bareng sosok sebaik dan sesabar Ms. Angela. Terima kasih sudah selalu perhatian sama hal-hal kecil di sekitar kita. Semoga Star Champs makin maju dan berkah terus di bawah kepemimpinan Ms. Angela!"
         },
         {
-            author: "Mr. Kevin",
+            author: "Evit",
             message: "Happy Birthday, Ms. Angela! 🙌 Respect banget buat dedikasi dan konsistensi Ms. Angela dalam menjaga kualitas pelayanan terapi sekaligus menjaga kekompakan tim di Star Champs. Nggak gampang jadi pemimpin yang bisa tegas sekaligus punya empati tinggi, tapi Ms. Angela berhasil nunjukin itu ke kita semua. Semoga di tahun yang baru ini semua rencana besar Ms. Angela dan Star Champs berjalan mulus!"
         },
         {

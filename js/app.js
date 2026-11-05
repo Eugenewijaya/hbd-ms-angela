@@ -1,6 +1,7 @@
 /* ==========================================================================
-   app.js — kontroler utama: cover boarding pass, navigasi 4 halaman,
-   foto Ms. Angela, kolase 2 kolom doa 11 staf + modal typewriter, harapan & kue.
+   app.js — kontroler utama: cover boarding pass, navigasi bertahap (step dock
+   muncul di akhir), foto Ms. Angela, kolase 2 kolom amplop tertutup 11 staf +
+   modal typewriter, serta halaman harapan & kue.
    ========================================================================== */
 (function () {
     const SC = (window.SC = window.SC || {});
@@ -13,15 +14,16 @@
         "assets/stickers/star.png",
         "assets/stickers/plane.png"
     ];
-    const ROTS = ["-1.4deg", "1.2deg", "-0.8deg", "1.5deg", "-1.1deg", "0.9deg"];
+    const ROTS = ["-1.3deg", "1.1deg", "-0.7deg", "1.4deg", "-1.0deg", "0.8deg"];
     const TINTS = ["", "letter--sky", "letter--paper"];
 
     let currentPage = "ucapan";
     let currentLetter = 0;
     let coverOpened = false;
     let openingTyped = false;
+    let allUnlocked = false;
 
-    /* ---------- Inisialisasi nama ---------- */
+    /* ---------- Inisial nama ---------- */
     function initials(name) {
         const clean = String(name).replace(/^(Miss|Ms\.?|Mr\.?|Aa|Teh)\s+/i, "").trim();
         const parts = clean.split(/\s+/);
@@ -63,7 +65,7 @@
         });
     }
 
-    /* ---------- 2. Navigasi 4 Halaman ---------- */
+    /* ---------- 2. Navigasi 4 Halaman (Dock muncul di akhir) ---------- */
     function goTo(pageId) {
         if (!pageId || pageId === currentPage) return;
         if (currentPage === "photobooth" && pageId !== "photobooth" && SC.booth) {
@@ -80,10 +82,17 @@
             else btn.removeAttribute("aria-current");
         });
 
+        // Munculkan navigasi 01..04 di footer HANYA setelah mencapai halaman terakhir (Photobooth)
+        if (pageId === "photobooth" && !allUnlocked) {
+            allUnlocked = true;
+            const dock = SC.$("#stepDock");
+            if (dock) dock.hidden = false;
+        }
+
         window.scrollTo({ top: 0, behavior: "smooth" });
 
         if (pageId === "harapan") {
-            SC.fx.burst(40);
+            SC.fx.burst(55);
         }
     }
 
@@ -107,7 +116,6 @@
             img.src = src;
         }
 
-        // Cek apakah ada foto tersimpan di browser
         try {
             const saved = localStorage.getItem("sc_angela_photo");
             if (saved) showPhoto(saved);
@@ -131,7 +139,6 @@
             });
         }
 
-        // Efek tilt halus pada desktop
         if (card && window.matchMedia("(pointer: fine)").matches && !SC.reducedMotion) {
             card.addEventListener("pointermove", (e) => {
                 const r = card.getBoundingClientRect();
@@ -145,7 +152,7 @@
         }
     }
 
-    /* ---------- 4. Kolase 2 Kolom Menurun (11 Staf) ---------- */
+    /* ---------- 4. Kolase 2 Kolom Menurun (11 Amplop Surat Tertutup) ---------- */
     function renderCollage() {
         const colL = SC.$("#colLeft");
         const colR = SC.$("#colRight");
@@ -160,7 +167,6 @@
             btn.className = "letter" + (tint ? " " + tint : "");
             btn.style.setProperty("--rot", ROTS[i % ROTS.length]);
             btn.style.setProperty("--i", i);
-            btn.style.setProperty("--lines", i % 3 === 0 ? 4 : 3);
             btn.setAttribute("aria-label", "Buka surat dari " + item.author);
 
             const stickerSrc = STICKERS[i % STICKERS.length];
@@ -170,29 +176,16 @@
                 <span class="letter__flap" aria-hidden="true"></span>
                 <span class="letter__seal" aria-hidden="true">${SC.icon("star")}</span>
                 <img class="sticker ${stickerPos}" src="${stickerSrc}" alt="" loading="lazy">
-                <span class="letter__no">SURAT ${String(i + 1).padStart(2, "0")} / ${String(SC.staff.length).padStart(2, "0")}</span>
+                <span class="letter__no">SURAT #${String(i + 1).padStart(2, "0")}</span>
+                <span class="letter__from">DARI</span>
                 <span class="letter__name">${SC.esc(item.author)}</span>
-                <span class="letter__peek">${SC.esc(item.message)}</span>
                 <span class="letter__cta">Buka Surat &rarr;</span>
             `;
             btn.addEventListener("click", () => openLetterModal(i));
 
-            // Baris menurun dalam 2 kolom: genap di kiri, ganjil di kanan
             if (i % 2 === 0) colL.appendChild(btn);
             else colR.appendChild(btn);
         });
-
-        // Tombol tambah surat di kolom kanan (karena 11 item: kiri 6, kanan 5)
-        const addBtn = document.createElement("button");
-        addBtn.type = "button";
-        addBtn.className = "letter letter--add";
-        addBtn.innerHTML = `
-            <span class="plus" aria-hidden="true">${SC.icon("plus")}</span>
-            <span class="letter__name">Tulis Surat Baru</span>
-            <span class="letter__no">Tambahkan ucapan ke kolase</span>
-        `;
-        addBtn.addEventListener("click", openAddModal);
-        (SC.staff.length % 2 === 0 ? colL : colR).appendChild(addBtn);
     }
 
     /* ---------- 5. Modal Surat Staf (Typewriter) ---------- */
@@ -245,50 +238,16 @@
         updateLetterModal();
     }
 
-    /* ---------- 6. Modal Tambah Surat ---------- */
-    function openAddModal() {
-        const m = SC.$("#addModal");
-        if (!m) return;
-        SC.audio.tap();
-        m.classList.add("is-open");
-        m.setAttribute("aria-hidden", "false");
-        const input = SC.$("#addName");
-        if (input) setTimeout(() => input.focus(), 60);
-    }
-
-    function closeAddModal() {
-        const m = SC.$("#addModal");
-        if (!m) return;
-        m.classList.remove("is-open");
-        m.setAttribute("aria-hidden", "true");
-    }
-
-    function onAddSubmit(e) {
-        e.preventDefault();
-        const nameEl = SC.$("#addName");
-        const msgEl = SC.$("#addMessage");
-        const author = nameEl ? nameEl.value.trim() : "";
-        const message = msgEl ? msgEl.value.trim() : "";
-        if (!author || !message) {
-            SC.toast("Mohon isi nama dan pesan terlebih dahulu.");
-            return;
-        }
-        SC.staff.push({ author, message });
-        if (nameEl) nameEl.value = "";
-        if (msgEl) msgEl.value = "";
-        renderCollage();
-        closeAddModal();
-        openLetterModal(SC.staff.length - 1);
-        SC.fx.burst(45);
-    }
-
-    /* ---------- 7. Halaman Harapan & Tiup Lilin ---------- */
+    /* ---------- 6. Halaman Harapan & Tiup Lilin ---------- */
     function initWishes() {
         const box = SC.$("#wishesBody");
         if (box && Array.isArray(SC.wishes)) {
-            box.innerHTML = SC.wishes.map((p, i) =>
-                i === 0 ? `<p class="sign">${SC.esc(p)}</p>` : `<p>${SC.esc(p)}</p>`
-            ).join("");
+            const last = SC.wishes.length - 1;
+            box.innerHTML = SC.wishes.map((p, i) => {
+                if (i === 0) return `<p class="sign">${SC.esc(p)}</p>`;
+                if (i === last) return `<p class="quote">&ldquo;${SC.esc(p)}&rdquo;</p>`;
+                return `<p>${SC.esc(p)}</p>`;
+            }).join("");
         }
 
         const cake = SC.$("#cakeBox");
@@ -317,7 +276,7 @@
         }
     }
 
-    /* ---------- 8. Boot ---------- */
+    /* ---------- 7. Boot ---------- */
     function init() {
         SC.fx.init();
         SC.audio.init();
@@ -327,21 +286,17 @@
         initWishes();
         if (SC.booth) SC.booth.init();
 
-        // Event cover
         const openBtn = SC.$("#openBtn");
         const ticket = SC.$("#ticket");
         if (openBtn) openBtn.addEventListener("click", openCover);
         if (ticket) ticket.addEventListener("click", openCover);
 
-        // Skip ketik di halaman 1
         const skipOpen = SC.$("#skipOpeningBtn");
         if (skipOpen) skipOpen.addEventListener("click", () => SC.typewriter.skip());
 
-        // Navigasi
         SC.$$("[data-nav]").forEach((b) => b.addEventListener("click", () => goTo(b.dataset.nav)));
         SC.$$("[data-goto]").forEach((b) => b.addEventListener("click", () => goTo(b.dataset.goto)));
 
-        // Modal surat
         const closeBtn = SC.$("#closeModal");
         const prevBtn = SC.$("#prevLetter");
         const nextBtn = SC.$("#nextLetter");
@@ -355,25 +310,12 @@
             letterModal.addEventListener("click", (e) => { if (e.target === letterModal) closeLetterModal(); });
         }
 
-        // Modal tambah surat
-        const closeAdd = SC.$("#closeAddModal");
-        const addForm = SC.$("#addForm");
-        const addModal = SC.$("#addModal");
-        if (closeAdd) closeAdd.addEventListener("click", closeAddModal);
-        if (addForm) addForm.addEventListener("submit", onAddSubmit);
-        if (addModal) {
-            addModal.addEventListener("click", (e) => { if (e.target === addModal) closeAddModal(); });
-        }
-
-        // Shortcut keyboard untuk aksesibilitas
         window.addEventListener("keydown", (e) => {
             if (letterModal && letterModal.classList.contains("is-open")) {
                 if (e.key === "Escape") closeLetterModal();
                 else if (e.key === "ArrowRight") stepLetter(1);
                 else if (e.key === "ArrowLeft") stepLetter(-1);
                 else if (e.key === " " && SC.typewriter.isTyping()) { e.preventDefault(); SC.typewriter.skip(); }
-            } else if (addModal && addModal.classList.contains("is-open") && e.key === "Escape") {
-                closeAddModal();
             }
         });
     }

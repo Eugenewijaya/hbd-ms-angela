@@ -45,21 +45,24 @@ Dirancang dengan identitas visual **Star Champs ★ Air** (*boarding pass*, biru
    - Animasi sinar memancar berlapis (`conic-gradient` berputar lembut), cahaya *breathing glow*, gelombang cincin (*expanding rings*), bintang berkelip, dan elemen 3D ringan.
    - Seluruh animasi menggunakan properti ramah GPU (`transform` & `opacity`) dan otomatis menyesuaikan performa perangkat agar berjalan mulus di berbagai HP maupun laptop.
 
-2. **Halaman 1 — Ucapan & Catatan Doa (Tanpa SVG untuk Foto)**
+2. **Halaman 1 — Ucapan & Catatan Doa (Mobile-Friendly & Tanpa SVG untuk Foto)**
+   - Header bergaya tiket *boarding pass* **Star Champs ★ Air** (`ALSUT ✈ KARAWACI` / `ALST ✈ KRWC`).
    - Bingkai foto Ms. Angela menggunakan aset raster dan tombol **Pasang Foto** yang langsung menyimpan foto di browser.
    - Catatan doa di atas kertas bergaris dengan efek **Typewriter** dan tombol *Lewati Ketik*.
+   - Navigasi langkah di bagian bawah disembunyikan di awal agar alur cerita berurutan, dan otomatis terbuka setelah pengguna mencapai bagian akhir (*Photobooth*).
 
-3. **Halaman 2 — Kolase 2 Kolom Menurun Doa 11 Staf**
-   - 11 surat staf (*Miss Riska, Mr. Nathan, Miss Nabila, Mr. Regina, Miss Stella, Miss Tata, Aa Daus, Teyana, Teh Nabila, Mr. Kevin, Miss Lena*) disusun dalam **kolase 2 baris kolom menurun ke bawah**.
-   - Setiap surat dibungkus sebagai amplop dengan segel bintang dan stiker Star Champs Air.
-   - Saat diklik, muncul pop-up modal surat dengan efek **Typewriter**, navigasi *Sebelumnya / Berikutnya*, serta fitur tambah surat baru.
+3. **Halaman 2 — Kolase 2 Kolom Menurun Amplop Doa 11 Staf**
+   - 11 surat staf (*Miss Riska, Mr. Nathan, Miss Nabila, Mr. Regina, Miss Stella, Miss Tata, Aa Daus, Teh Yana, Teh Nabila, Evit, Miss Lena*) disusun dalam **kolase 2 baris kolom menurun ke bawah**.
+   - Setiap surat dibungkus rapat dalam bentuk amplop bersegel bintang tanpa menampilkan bocoran isi pesan di luar.
+   - Saat amplop diklik, muncul pop-up modal surat dengan efek **Typewriter** dan navigasi *Sebelumnya / Berikutnya*.
 
-4. **Halaman 3 — Harapan Bersama & Tiup Lilin Interaktif**
-   - Surat harapan dari seluruh staf dan manajemen Star Champs.
-   - Kue ulang tahun interaktif yang bisa ditiup untuk memicu confetti dan membuka pintasan ke Photobooth.
+4. **Halaman 3 — Panggung Harapan Bersama & Tiup Lilin Interaktif**
+   - Tampilan panggung malam berbintang (*Starlight Navy Stage*) yang dramatis namun hangat dengan sorot cahaya lembut dan kutipan doa utama.
+   - Kue ulang tahun interaktif dengan pendar cahaya lilin yang bisa ditiup untuk memicu confetti dan membuka langkah menuju Photobooth.
 
-5. **Halaman 4 — Photobooth "Star Champs ★ Air"**
-   - Menggunakan frame asli dari PDF (`assets/frames/star-champs-air.png`) dengan 2 strip kembar × 3 pose (`ALST ✈ KRWC · FLIGHT LRN001 · 03 NOV`) dan ilustrasi kamera biru khas Star Champs Air.
-   - **Sesi 3 Foto Otomatis** dengan hitung mundur `3..2..1`, lampu kilat layar, atau unggah foto dari galeri perangkat.
+5. **Halaman 4 — Photobooth "Star Champs ★ Air" (Live Preview di Dalam Frame)**
+   - Menggunakan frame asli yang telah diperbarui (`assets/frames/star-champs-air.png`) dengan 2 strip kembar × 3 pose (`ALST ✈ KRWC · FLIGHT KRWC001 · 03 NOV`) dan ilustrasi kamera biru khas Star Champs Air.
+   - **Live Camera Preview langsung di dalam slot frame**, sehingga pengguna langsung melihat posenya di dalam bingkai tiket sebelum memotret.
+   - **Sesi 3 Foto Otomatis** dengan hitung mundur `3..2..1`, lampu kilat layar, atau unggah foto per slot dari galeri perangkat.
    - **5 Filter Warna** (*Normal, Warm, Sky Cool, Film, B&W*) yang diproses langsung pada piksel kanvas agar konsisten di iOS Safari, Android Chrome, dan desktop.
    - **Simpan Frame (2:3)** sesuai ukuran cetak PDF (1080×1620), **Simpan Story (9:16)** (1080×1920), atau **Bagikan langsung ke Instagram Story / WhatsApp** melalui Web Share API.

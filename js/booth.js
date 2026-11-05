@@ -1,7 +1,6 @@
 /* ==========================================================================
-   booth.js — photobooth: 3 pose -> frame "Star Champs Air" (2 strip identik)
-   Frame & posisi slot dibaca dari js/frame-config.js (SC_FRAME).
-   Filter diproses manual di canvas agar hasilnya sama di semua browser (iOS).
+   booth.js — photobooth: 3 pose -> frame "Star Champs Air" (FLIGHT KRWC001)
+   Live kamera & foto langsung tampil di dalam jendela frame Star Champs Air.
    ========================================================================== */
 (function () {
     const SC = (window.SC = window.SC || {});
@@ -21,11 +20,18 @@
     let photos = new Array(PER).fill(null); // { raw: canvas, filtered: canvas }
     let active = 0, filter = "normal", facing = "user";
     let stream = null, session = false, counting = false;
-    let frameImg = null, frameReady = false, renderQueued = false;
+    let frameImg = null, frameReady = false;
+    let camStickerImg = null, camStickerReady = false;
+    let renderQueued = false, liveRaf = 0;
     const el = {};
 
     /* ---------- util canvas ---------- */
-    function mkCanvas(w, h) { const c = document.createElement("canvas"); c.width = Math.round(w); c.height = Math.round(h); return c; }
+    function mkCanvas(w, h) {
+        const c = document.createElement("canvas");
+        c.width = Math.round(w);
+        c.height = Math.round(h);
+        return c;
+    }
 
     /** potong tengah sumber sesuai rasio slot, hasil <= maxW */
     function coverCrop(src, sw, sh, mirror) {
@@ -36,6 +42,23 @@
         if (mirror) { x.translate(ow, 0); x.scale(-1, 1); }
         x.drawImage(src, (sw - cw) / 2, (sh - ch) / 2, cw, ch, 0, 0, ow, oh);
         return c;
+    }
+
+    /** gambar sumber video/gambar langsung ke kotak (dx, dy, dw, dh) secara cover */
+    function drawCoverInto(ctx, src, sw, sh, dx, dy, dw, dh, mirror) {
+        if (!sw || !sh) return;
+        const targetAr = dw / dh;
+        let cw = sw, ch = sw / targetAr;
+        if (ch > sh) { ch = sh; cw = sh * targetAr; }
+        ctx.save();
+        if (mirror) {
+            ctx.translate(dx + dw, dy);
+            ctx.scale(-1, 1);
+            ctx.drawImage(src, (sw - cw) / 2, (sh - ch) / 2, cw, ch, 0, 0, dw, dh);
+        } else {
+            ctx.drawImage(src, (sw - cw) / 2, (sh - ch) / 2, cw, ch, dx, dy, dw, dh);
+        }
+        ctx.restore();
     }
 
     function applyFilter(raw, name, outW, outH) {
@@ -66,35 +89,84 @@
         return c;
     }
 
-    /* ---------- komposisi frame ---------- */
+    /* ---------- komposisi frame (live kamera & foto langsung di dalam frame) ---------- */
     function compose(ctx, opts) {
-        const label = !opts || opts.label !== false;
+        const isLivePreview = !opts || opts.label !== false;
         ctx.fillStyle = "#f4f4f1";
         ctx.fillRect(0, 0, F.width, F.height);
 
+        const hasLiveVideo = isLivePreview && stream && el.video && el.video.videoWidth > 0;
+
         F.slots.forEach((s, k) => {
-            const idx = k % PER, p = photos[idx];
+            const idx = k % PER;
+            const p = photos[idx];
+            const isActiveSlot = idx === active;
+
             ctx.save();
-            ctx.beginPath(); ctx.rect(s.x - 3, s.y - 3, s.w + 6, s.h + 6); ctx.clip();
-            if (p) {
+            ctx.beginPath();
+            ctx.rect(s.x - 3, s.y - 3, s.w + 6, s.h + 6);
+            ctx.clip();
+
+            if (p && !(hasLiveVideo && isActiveSlot && counting)) {
+                // Gambar foto yang sudah diambil untuk slot ini
                 ctx.drawImage(p.filtered, s.x - 3, s.y - 3, s.w + 6, s.h + 6);
+            } else if (hasLiveVideo && (isActiveSlot || !p)) {
+                // Tampilkan live feed kamera langsung di dalam jendela frame!
+                drawCoverInto(
+                    ctx,
+                    el.video,
+                    el.video.videoWidth,
+                    el.video.videoHeight,
+                    s.x - 3,
+                    s.y - 3,
+                    s.w + 6,
+                    s.h + 6,
+                    facing === "user"
+                );
+                if (!isActiveSlot) {
+                    ctx.fillStyle = "rgba(1, 51, 117, 0.32)";
+                    ctx.fillRect(s.x - 3, s.y - 3, s.w + 6, s.h + 6);
+                }
             } else {
+                // Latar langit & bukit lembut khas Star Champs Air saat kamera belum aktif
                 const g = ctx.createLinearGradient(0, s.y, 0, s.y + s.h);
-                g.addColorStop(0, "#cfe3fd"); g.addColorStop(1, "#eef5ff");
-                ctx.fillStyle = g; ctx.fillRect(s.x - 3, s.y - 3, s.w + 6, s.h + 6);
-                if (label) {
-                    ctx.fillStyle = "rgba(1,51,117,.55)";
-                    ctx.font = "600 30px 'IBM Plex Mono', monospace";
-                    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                    ctx.fillText("FOTO " + (idx + 1), s.x + s.w / 2, s.y + s.h / 2);
+                g.addColorStop(0, "#cfe6ff");
+                g.addColorStop(0.68, "#eaf4ff");
+                g.addColorStop(0.69, "#b7d875");
+                g.addColorStop(1, "#7ca82b");
+                ctx.fillStyle = g;
+                ctx.fillRect(s.x - 3, s.y - 3, s.w + 6, s.h + 6);
+
+                // Awan putih lembut di dalam slot
+                ctx.fillStyle = "rgba(255,255,255,0.9)";
+                const cx = s.x + s.w * 0.5, cy = s.y + s.h * 0.28;
+                ctx.beginPath();
+                ctx.arc(cx - 34, cy + 8, 26, 0, Math.PI * 2);
+                ctx.arc(cx, cy - 4, 34, 0, Math.PI * 2);
+                ctx.arc(cx + 36, cy + 8, 24, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (isLivePreview) {
+                    if (camStickerReady && isActiveSlot) {
+                        const cw = 84, ch = cw * (camStickerImg.height / camStickerImg.width);
+                        ctx.drawImage(camStickerImg, s.x + (s.w - cw) / 2, s.y + s.h * 0.36, cw, ch);
+                    }
+                    ctx.fillStyle = isActiveSlot ? "#013375" : "rgba(1,51,117,.65)";
+                    ctx.font = "700 26px 'IBM Plex Mono', monospace";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("POSE " + (idx + 1) + (isActiveSlot ? " • SIAP" : ""), s.x + s.w / 2, s.y + s.h * 0.72);
                 }
             }
             ctx.restore();
-            // garis tepi tipis seperti di frame asli
-            ctx.strokeStyle = F.border; ctx.lineWidth = 4;
+
+            // Garis tepi slot (highlight slot aktif saat mode preview)
+            ctx.strokeStyle = isLivePreview && isActiveSlot && !p ? "#013375" : F.border;
+            ctx.lineWidth = isLivePreview && isActiveSlot && !p ? 6 : 4;
             ctx.strokeRect(s.x + 2, s.y + 2, s.w - 4, s.h - 4);
         });
 
+        // Gambar layer frame Star Champs Air (dengan stiker & KRWC001) di atas semua foto
         if (frameReady) ctx.drawImage(frameImg, 0, 0, F.width, F.height);
     }
 
@@ -103,7 +175,34 @@
         if (!el.preview) return;
         compose(el.preview.getContext("2d"), { label: true });
     }
-    function queueRender() { if (!renderQueued) { renderQueued = true; requestAnimationFrame(renderPreview); } }
+
+    function queueRender() {
+        if (!renderQueued) {
+            renderQueued = true;
+            requestAnimationFrame(renderPreview);
+        }
+    }
+
+    function startLivePreviewLoop() {
+        stopLivePreviewLoop();
+        let last = 0;
+        function tick(now) {
+            if (!stream) { liveRaf = 0; return; }
+            if (now - last > 40) {
+                last = now;
+                renderPreview();
+            }
+            liveRaf = requestAnimationFrame(tick);
+        }
+        liveRaf = requestAnimationFrame(tick);
+    }
+
+    function stopLivePreviewLoop() {
+        if (liveRaf) {
+            cancelAnimationFrame(liveRaf);
+            liveRaf = 0;
+        }
+    }
 
     /* ---------- state foto ---------- */
     function setPhoto(idx, raw) {
@@ -113,15 +212,26 @@
         queueRender();
     }
 
-    function clearPhoto(idx) { photos[idx] = null; drawThumb(idx); queueRender(); }
+    function clearPhoto(idx) {
+        photos[idx] = null;
+        drawThumb(idx);
+        queueRender();
+    }
 
     function refilterAll() {
-        photos.forEach((p, i) => { if (p) { const s = F.slots[i]; p.filtered = applyFilter(p.raw, filter, s.w, s.h); drawThumb(i); } });
+        photos.forEach((p, i) => {
+            if (p) {
+                const s = F.slots[i];
+                p.filtered = applyFilter(p.raw, filter, s.w, s.h);
+                drawThumb(i);
+            }
+        });
         queueRender();
     }
 
     function drawThumb(idx) {
         const b = el.shots[idx];
+        if (!b) return;
         const old = b.querySelector("canvas");
         if (old) old.remove();
         b.classList.toggle("is-filled", !!photos[idx]);
@@ -135,11 +245,15 @@
     function selectSlot(i) {
         active = i;
         el.shots.forEach((b, k) => b.classList.toggle("is-active", k === i));
-        el.chip.textContent = "Foto " + (i + 1) + " / " + PER;
+        el.chip.textContent = "Pose " + (i + 1) + " / " + PER;
+        queueRender();
     }
 
     function nextSlot() {
-        for (let k = 1; k <= PER; k++) { const n = (active + k) % PER; if (!photos[n]) return selectSlot(n); }
+        for (let k = 1; k <= PER; k++) {
+            const n = (active + k) % PER;
+            if (!photos[n]) return selectSlot(n);
+        }
         selectSlot((active + 1) % PER);
     }
 
@@ -147,73 +261,115 @@
     async function startCamera() {
         stopCamera();
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            SC.toast("Kamera butuh koneksi aman (HTTPS). Pakai tombol Upload sebagai gantinya.", 4500);
+            SC.toast("Kamera butuh koneksi aman (HTTPS). Gunakan tombol Upload Foto.", 4500);
             return false;
         }
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false });
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 960 } },
+                audio: false
+            });
         } catch (err) {
-            const msg = err && err.name === "NotAllowedError" ? "Izin kamera ditolak. Aktifkan di pengaturan browser, atau pakai Upload."
-                : err && err.name === "NotFoundError" ? "Kamera tidak ditemukan. Pakai tombol Upload." : "Kamera tidak bisa dibuka. Pakai tombol Upload.";
+            const msg = err && err.name === "NotAllowedError"
+                ? "Izin kamera ditolak. Aktifkan izin kamera atau gunakan tombol Upload Foto."
+                : "Kamera tidak tersedia. Gunakan tombol Upload Foto.";
             SC.toast(msg, 4500);
             return false;
         }
         el.video.srcObject = stream;
         el.video.classList.toggle("is-mirror", facing === "user");
-        try { await el.video.play(); } catch (e) { /* autoplay dipicu gesture, abaikan */ }
-        el.video.hidden = false; el.idle.hidden = true;
-        el.camBtn.hidden = true; el.flipBtn.hidden = false;
+        try { await el.video.play(); } catch (e) { /* autoplay dipicu gesture */ }
+        el.video.hidden = false;
+        el.idle.hidden = true;
+        el.camBtn.hidden = true;
+        el.flipBtn.hidden = false;
         updateButtons();
+        startLivePreviewLoop();
         return true;
     }
 
     function stopCamera() {
-        if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
-        if (el.video) { el.video.srcObject = null; el.video.hidden = true; }
+        stopLivePreviewLoop();
+        if (stream) {
+            stream.getTracks().forEach((t) => t.stop());
+            stream = null;
+        }
+        if (el.video) {
+            el.video.srcObject = null;
+            el.video.hidden = true;
+        }
         if (el.idle) el.idle.hidden = false;
-        if (el.camBtn) { el.camBtn.hidden = false; el.flipBtn.hidden = true; }
-        session = false; counting = false;
+        if (el.camBtn) {
+            el.camBtn.hidden = false;
+            el.flipBtn.hidden = true;
+        }
+        session = false;
+        counting = false;
         if (el.count) el.count.classList.remove("is-on");
         updateButtons();
+        queueRender();
     }
 
-    function flip() { facing = facing === "user" ? "environment" : "user"; startCamera(); }
+    function flip() {
+        facing = facing === "user" ? "environment" : "user";
+        startCamera();
+    }
 
     function shoot(idx) {
         const v = el.video;
         if (!v.videoWidth) return;
         SC.audio.shutter();
-        el.flash.classList.remove("is-on"); void el.flash.offsetWidth; el.flash.classList.add("is-on");
+        el.flash.classList.remove("is-on");
+        void el.flash.offsetWidth;
+        el.flash.classList.add("is-on");
         setPhoto(idx, coverCrop(v, v.videoWidth, v.videoHeight, facing === "user"));
     }
 
     async function countdown(n) {
-        counting = true; updateButtons();
+        counting = true;
+        updateButtons();
         el.count.classList.add("is-on");
         for (let i = n; i > 0; i--) {
             if (!stream || (!session && !counting)) break;
             el.countNum.textContent = i;
-            el.countNum.style.animation = "none"; void el.countNum.offsetWidth; el.countNum.style.animation = "";
+            el.countNum.style.animation = "none";
+            void el.countNum.offsetWidth;
+            el.countNum.style.animation = "";
             SC.audio.beep();
             await SC.wait(900);
             if (!stream || !counting) break;
         }
         el.count.classList.remove("is-on");
         const ok = !!stream && counting;
-        counting = false; updateButtons();
+        counting = false;
+        updateButtons();
         return ok;
     }
 
     async function singleShot() {
-        if (session || counting) { counting = false; session = false; return; }
+        if (session || counting) {
+            counting = false;
+            session = false;
+            return;
+        }
         if (!stream && !(await startCamera())) return;
-        if (await countdown(3)) { shoot(active); nextSlot(); SC.fx.burst(24, centerOf(el.vf)); }
+        if (await countdown(3)) {
+            shoot(active);
+            nextSlot();
+            SC.fx.burst(24, centerOf(el.vf));
+        }
     }
 
     async function runSession() {
-        if (session) { session = false; counting = false; updateButtons(); return; }
+        if (session) {
+            session = false;
+            counting = false;
+            updateButtons();
+            return;
+        }
         if (!stream && !(await startCamera())) return;
-        session = true; updateButtons();
+        session = true;
+        updateButtons();
         photos.forEach((_, i) => clearPhoto(i));
         for (let i = 0; i < PER && session; i++) {
             selectSlot(i);
@@ -222,11 +378,19 @@
             await SC.wait(800);
         }
         const done = session && photos.every(Boolean);
-        session = false; updateButtons();
-        if (done) { SC.audio.chime(); SC.fx.burst(60, centerOf(el.vf)); SC.toast("Sesi selesai. Pilih filter lalu simpan atau bagikan."); }
+        session = false;
+        updateButtons();
+        if (done) {
+            SC.audio.chime();
+            SC.fx.burst(60, centerOf(el.preview));
+            SC.toast("3 pose sudah masuk ke dalam frame Star Champs Air!");
+        }
     }
 
-    function centerOf(node) { const r = node.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }
+    function centerOf(node) {
+        const r = node.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }
 
     /* ---------- upload ---------- */
     function loadImage(file) {
@@ -247,10 +411,17 @@
             try {
                 const im = await loadImage(f);
                 setPhoto(i, coverCrop(im, im.naturalWidth, im.naturalHeight, false));
-                i = (i + 1) % PER; ok++;
-            } catch (err) { SC.toast("Salah satu foto tidak bisa dibaca."); }
+                i = (i + 1) % PER;
+                ok++;
+            } catch (err) {
+                SC.toast("Salah satu foto tidak bisa dibaca.");
+            }
         }
-        if (ok) { selectSlot(i); SC.audio.chime(); }
+        if (ok) {
+            selectSlot(i);
+            SC.audio.chime();
+            SC.toast("Foto berhasil masuk ke dalam frame!");
+        }
     }
 
     /* ---------- ekspor ---------- */
@@ -263,7 +434,12 @@
     const imgCache = {};
     function loadAsset(src) {
         if (imgCache[src]) return imgCache[src];
-        imgCache[src] = new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+        imgCache[src] = new Promise((res) => {
+            const i = new Image();
+            i.onload = () => res(i);
+            i.onerror = () => res(null);
+            i.src = src;
+        });
         return imgCache[src];
     }
 
@@ -271,39 +447,70 @@
         const W = 1080, H = 1920;
         const c = mkCanvas(W, H), x = c.getContext("2d");
         const g = x.createRadialGradient(W / 2, H * 0.45, 80, W / 2, H * 0.45, H * 0.75);
-        g.addColorStop(0, "#0f4c9e"); g.addColorStop(0.45, "#013375"); g.addColorStop(1, "#001a3d");
-        x.fillStyle = g; x.fillRect(0, 0, W, H);
+        g.addColorStop(0, "#0f4c9e");
+        g.addColorStop(0.45, "#013375");
+        g.addColorStop(1, "#001a3d");
+        x.fillStyle = g;
+        x.fillRect(0, 0, W, H);
 
-        // sinar halus
-        x.save(); x.translate(W / 2, H * 0.45);
+        x.save();
+        x.translate(W / 2, H * 0.45);
         x.fillStyle = "rgba(178,212,255,.07)";
-        for (let a = 0; a < 24; a++) { x.rotate((Math.PI * 2) / 24); x.beginPath(); x.moveTo(0, 0); x.lineTo(1500, -60); x.lineTo(1500, 60); x.closePath(); x.fill(); }
+        for (let a = 0; a < 24; a++) {
+            x.rotate((Math.PI * 2) / 24);
+            x.beginPath();
+            x.moveTo(0, 0);
+            x.lineTo(1500, -60);
+            x.lineTo(1500, 60);
+            x.closePath();
+            x.fill();
+        }
         x.restore();
 
-        // frame di area aman (hindari UI Instagram di atas/bawah)
         const fh = 1480, fw = fh * (F.width / F.height), fx = (W - fw) / 2, fy = 220;
-        x.save(); x.shadowColor = "rgba(0,10,30,.6)"; x.shadowBlur = 50; x.shadowOffsetY = 24;
-        x.fillStyle = "#f4f4f1"; x.fillRect(fx, fy, fw, fh); x.restore();
+        x.save();
+        x.shadowColor = "rgba(0,10,30,.6)";
+        x.shadowBlur = 50;
+        x.shadowOffsetY = 24;
+        x.fillStyle = "#f4f4f1";
+        x.fillRect(fx, fy, fw, fh);
+        x.restore();
         x.drawImage(stripCanvas(), fx, fy, fw, fh);
 
-        try { await document.fonts.load("700 56px 'Barlow Condensed'"); await document.fonts.load("500 28px 'IBM Plex Mono'"); } catch (e) { /* font opsional */ }
-        x.textAlign = "center"; x.textBaseline = "middle";
-        x.fillStyle = "#b2d4ff"; x.font = "700 64px 'Barlow Condensed', sans-serif";
-        x.fillText("STAR CHAMPS  ★  AIR", W / 2, 130);
-        x.fillStyle = "#80b8f3"; x.font = "500 28px 'IBM Plex Mono', monospace";
-        x.fillText("HBD MS. ANGELA  ·  03 NOV", W / 2, H - 150);
+        try {
+            await document.fonts.load("700 56px 'Barlow Condensed'");
+            await document.fonts.load("500 28px 'IBM Plex Mono'");
+        } catch (e) { /* font opsional */ }
 
-        const [a, b] = await Promise.all([loadAsset("assets/stickers/asterisk-sky.png"), loadAsset("assets/stickers/starburst.png")]);
-        if (a) x.drawImage(a, 36, 60, 110, 110 * a.height / a.width);
-        if (b) x.drawImage(b, W - 150, H - 250, 110, 110 * b.height / b.width);
+        x.textAlign = "center";
+        x.textBaseline = "middle";
+        x.fillStyle = "#b2d4ff";
+        x.font = "700 64px 'Barlow Condensed', sans-serif";
+        x.fillText("STAR CHAMPS  ★  AIR", W / 2, 130);
+        x.fillStyle = "#80b8f3";
+        x.font = "500 28px 'IBM Plex Mono', monospace";
+        x.fillText("FLIGHT KRWC001  ·  HBD MS. ANGELA  ·  03 NOV", W / 2, H - 150);
+
+        const [a, b] = await Promise.all([
+            loadAsset("assets/stickers/asterisk-sky.png"),
+            loadAsset("assets/stickers/starburst.png")
+        ]);
+        if (a) x.drawImage(a, 36, 60, 110, (110 * a.height) / a.width);
+        if (b) x.drawImage(b, W - 150, H - 250, 110, (110 * b.height) / b.width);
         return c;
     }
 
-    function toBlob(canvas) { return new Promise((res) => canvas.toBlob(res, "image/png")); }
+    function toBlob(canvas) {
+        return new Promise((res) => canvas.toBlob(res, "image/png"));
+    }
 
     function save(blob, name) {
         const url = URL.createObjectURL(blob), a = document.createElement("a");
-        a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 5000);
     }
 
@@ -315,31 +522,43 @@
 
     async function downloadStrip() {
         if (!hasPhoto()) return;
-        save(await toBlob(stripCanvas()), "star-champs-air-strip.png");
-        SC.audio.chime(); SC.toast("Strip 2:3 tersimpan.");
+        save(await toBlob(stripCanvas()), "star-champs-air-krwc001-frame.png");
+        SC.audio.chime();
+        SC.toast("Frame Star Champs Air tersimpan.");
     }
 
     async function downloadStory() {
         if (!hasPhoto()) return;
-        save(await toBlob(await storyCanvas()), "star-champs-air-story-9x16.png");
-        SC.audio.chime(); SC.toast("Format Story 9:16 tersimpan.");
+        save(await toBlob(await storyCanvas()), "star-champs-air-krwc001-story-9x16.png");
+        SC.audio.chime();
+        SC.toast("Format Story 9:16 tersimpan.");
     }
 
     async function share() {
         if (!hasPhoto()) return;
         const blob = await toBlob(await storyCanvas());
-        const file = new File([blob], "star-champs-air-story-9x16.png", { type: "image/png" });
-        const data = { files: [file], title: "Happy Birthday Ms. Angela", text: "Selamat ulang tahun, Ms. Angela! #StarChamps" };
+        const file = new File([blob], "star-champs-air-krwc001-story.png", { type: "image/png" });
+        const data = {
+            files: [file],
+            title: "Happy Birthday Ms. Angela — Star Champs Air",
+            text: "Selamat ulang tahun, Ms. Angela! #StarChamps"
+        };
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try { await navigator.share(data); SC.fx.burst(50); return; }
-            catch (err) { if (err && err.name === "AbortError") return; }
+            try {
+                await navigator.share(data);
+                SC.fx.burst(50);
+                return;
+            } catch (err) {
+                if (err && err.name === "AbortError") return;
+            }
         }
-        save(blob, "star-champs-air-story-9x16.png");
+        save(blob, "star-champs-air-krwc001-story.png");
         SC.toast("Foto tersimpan. Buka Instagram, buat Story baru, lalu pilih foto ini.", 5000);
     }
 
     function reset() {
-        session = false; counting = false;
+        session = false;
+        counting = false;
         photos.forEach((_, i) => clearPhoto(i));
         selectSlot(0);
         updateButtons();
@@ -359,20 +578,50 @@
         el.sessionBtn.querySelector("span").textContent = session ? "Batalkan sesi" : "Mulai sesi " + PER + " foto";
         el.shotBtn.disabled = session;
         el.shotBtn.hidden = !cam;
-        el.shotBtn.querySelector("span").textContent = counting ? "Batalkan" : "Ambil 1 foto";
+        el.shotBtn.querySelector("span").textContent = counting ? "Batalkan" : "Jepret Pose " + (active + 1);
+    }
+
+    /* ---------- Klik langsung pada jendela slot di Frame Preview ---------- */
+    function onPreviewClick(e) {
+        const rect = el.preview.getBoundingClientRect();
+        const px = ((e.clientX - rect.left) / rect.width) * F.width;
+        const py = ((e.clientY - rect.top) / rect.height) * F.height;
+        for (let k = 0; k < F.slots.length; k++) {
+            const s = F.slots[k];
+            if (px >= s.x && px <= s.x + s.w && py >= s.y && py <= s.y + s.h) {
+                const slotIdx = k % PER;
+                selectSlot(slotIdx);
+                updateButtons();
+                SC.audio.tap();
+                return;
+            }
+        }
     }
 
     /* ---------- init ---------- */
     function init() {
         const root = SC.$("#booth");
         if (!root || !F) return;
-        el.vf = SC.$("#vf"); el.video = SC.$("#vfVideo"); el.idle = SC.$("#vfIdle"); el.chip = SC.$("#vfChip");
-        el.count = SC.$("#vfCount"); el.countNum = SC.$("#vfCount span"); el.flash = SC.$("#vfFlash");
-        el.camBtn = SC.$("#btnCam"); el.flipBtn = SC.$("#btnFlip"); el.sessionBtn = SC.$("#btnSession"); el.shotBtn = SC.$("#btnShot");
-        el.shots = SC.$$(".shot", root); el.filterBtns = SC.$$("[data-filter]", root); el.preview = SC.$("#previewCanvas");
+        el.vf = SC.$("#vf");
+        el.video = SC.$("#vfVideo");
+        el.idle = SC.$("#vfIdle");
+        el.chip = SC.$("#vfChip");
+        el.count = SC.$("#vfCount");
+        el.countNum = SC.$("#vfCount span");
+        el.flash = SC.$("#vfFlash");
+        el.camBtn = SC.$("#btnCam");
+        el.flipBtn = SC.$("#btnFlip");
+        el.sessionBtn = SC.$("#btnSession");
+        el.shotBtn = SC.$("#btnShot");
+        el.shots = SC.$$(".shot", root);
+        el.filterBtns = SC.$$("[data-filter]", root);
+        el.preview = SC.$("#previewCanvas");
 
         root.style.setProperty("--slot-ar", AR.toFixed(4));
-        el.preview.width = F.width; el.preview.height = F.height;
+        el.preview.width = F.width;
+        el.preview.height = F.height;
+        el.preview.style.cursor = "pointer";
+        el.preview.addEventListener("click", onPreviewClick);
 
         el.camBtn.addEventListener("click", startCamera);
         el.flipBtn.addEventListener("click", flip);
@@ -385,9 +634,22 @@
         SC.$("#btnReset").addEventListener("click", reset);
         el.filterBtns.forEach((b) => b.addEventListener("click", () => setFilter(b.dataset.filter)));
         el.shots.forEach((b, i) => {
-            b.addEventListener("click", (e) => { if (e.target.closest(".shot__clear")) { clearPhoto(i); return; } selectSlot(i); });
+            b.addEventListener("click", (e) => {
+                if (e.target.closest(".shot__clear")) {
+                    clearPhoto(i);
+                    return;
+                }
+                selectSlot(i);
+                updateButtons();
+            });
         });
-        document.addEventListener("visibilitychange", () => { if (document.hidden && stream) stopCamera(); });
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && stream) stopCamera();
+        });
+
+        camStickerImg = new Image();
+        camStickerImg.onload = () => { camStickerReady = true; queueRender(); };
+        camStickerImg.src = "assets/stickers/camera.png";
 
         frameImg = new Image();
         frameImg.onload = () => { frameReady = true; queueRender(); };
@@ -397,7 +659,6 @@
         selectSlot(0);
         updateButtons();
         queueRender();
-        // font mono dipakai pada label canvas: gambar ulang setelah font siap
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(queueRender);
     }
 
