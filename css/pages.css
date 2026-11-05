@@ -229,7 +229,7 @@ body.is-cover .step-dock { visibility: hidden; }
 }
 .photo .tape { top: -12px; left: 50%; margin-left: -48px; transform: rotate(-2deg); }
 .photo .sticker--a { width: 58px; right: -18px; top: -20px; z-index: 5; }
-.photo .sticker--c { width: 76px; left: -20px; bottom: -14px; z-index: 5; transform: rotate(-6deg); }
+.photo .sticker--c { width: 72px; left: -22px; bottom: 64px; z-index: 5; transform: rotate(-6deg); }
 
 /* Catatan Doa Pembuka (Mobile-Friendly & Enak Dibaca) */
 .note {
