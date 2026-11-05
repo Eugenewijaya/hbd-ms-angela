@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Ms. Angela! 🌟 | Star Champs Therapy</title>
+    <meta name="description" content="Website kejutan ulang tahun spesial untuk Ms. Angela dari keluarga besar Star Champs Speech Therapy. Dilengkapi animasi 3D, surat 11 staf, dan photobooth 9:16.">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Fredoka', 'sans-serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        hand: ['Patrick Hand', 'cursive'],
+                    },
+                    colors: {
+                        starYellow: '#FFD166',
+                        starCoral: '#FF6B8B',
+                        starBlue: '#4EA8DE',
+                        starMint: '#06D6A0',
+                        starPurple: '#9B5DE5',
+                        paperCream: '#FFFDF7',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Patrick+Hand&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Modular CSS Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/photobooth.css">
+
+    <!-- Three.js Library for 3D Wonderland Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="selection:bg-starYellow selection:text-slate-900">
+
+    <!-- =====================================================================
+         CANVAS BACKGROUNDS (3D THREE.JS SCENE + 2D CONFETTI)
+    ====================================================================== -->
+    <canvas id="three-canvas"></canvas>
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Hidden Canvas for 1080x1920 (9:16) Photobooth Export -->
+    <canvas id="photobooth-export-canvas"></canvas>
+
+    <!-- =====================================================================
+         FLOATING MUSIC CONTROLLER WIDGET (TOP-RIGHT)
+    ====================================================================== -->
+    <div id="floating-music-widget" title="Klik untuk Nyalakan/Jeda Musik Background">
+        <div class="music-disc">
+            <div class="music-disc-center"></div>
+        </div>
+        <div class="sound-waves">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+        </div>
+        <span id="music-status-text" class="text-xs font-display font-bold text-slate-700">
+            BGM Nyala 🎵
+        </span>
+    </div>
+
+    <!-- =====================================================================
+         STAGE 0: 3D HERO ENVELOPE OPENING OVERLAY
+    ====================================================================== -->
+    <div id="envelope-stage" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-gradient-to-br from-amber-50/95 via-rose-100/95 to-sky-100/95 backdrop-blur-md transition-opacity duration-500">
+        
+        <div class="text-center mb-6 z-10 max-w-md px-2 animate-pop-in">
+            <span class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-white text-starCoral border-2 border-starCoral font-display font-bold text-xs uppercase tracking-wider mb-2 shadow-sm">
+                🌟 Star Champs Speech Therapy
+            </span>
+            <h1 class="font-display text-3xl md:text-5xl font-bold text-slate-800 leading-tight">
+                Ada Surat Spesial Buat <span class="text-starCoral underline decoration-wavy decoration-starYellow">Ms. Angela!</span>
+            </h1>
+            <p class="text-slate-600 text-sm md:text-base mt-2 font-medium">
+                Klik segel bintang di amplop bawah ini untuk membuka kejutan ulang tahun penuh cinta 🎉
+            </p>
+        </div>
+
+        <!-- 3D Interactive Envelope -->
+        <div class="perspective-1000 relative flex items-center justify-center my-2 z-20">
+            <div id="envelope-box" onclick="openBirthdayEnvelope()" class="envelope-wrapper cursor-pointer relative w-80 sm:w-96 h-56 sm:h-64 select-none group">
+                
+                <!-- Back of Envelope -->
+                <div class="absolute inset-0 bg-gradient-to-b from-rose-300 to-rose-400 rounded-3xl shadow-2xl border-4 border-white"></div>
+
+                <!-- Inside Paper Letter That Slides Out On Click -->
+                <div id="sliding-paper" class="envelope-letter absolute left-4 right-4 top-3 bottom-3 bg-paperCream rounded-2xl shadow-lg p-5 border-2 border-amber-200 flex flex-col justify-between z-10">
+                    <div class="flex items-center justify-between border-b border-dashed border-rose-200 pb-2">
+                        <span class="font-display font-bold text-xs text-starCoral uppercase tracking-wider">🌟 Star Champs</span>
+                        <span class="text-base">🎈🎂</span>
+                    </div>
+                    <div class="my-auto text-center py-2">
+                        <p class="font-hand text-2xl sm:text-3xl text-slate-800 font-bold leading-snug">
+                            "Happy Birthday,<br>Ms. Angela!"
+                        </p>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">Membuka lembaran doa & cinta...</p>
+                    </div>
+                    <div class="flex justify-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-starYellow"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-starCoral"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-starMint"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-starBlue"></span>
+                    </div>
+                </div>
+
+                <!-- Envelope Front Folds -->
+                <div class="absolute inset-0 z-20 pointer-events-none overflow-hidden rounded-3xl">
+                    <div class="absolute inset-y-0 left-0 w-1/2 bg-rose-200/90" style="clip-path: polygon(0 0, 100% 50%, 0 100%);"></div>
+                    <div class="absolute inset-y-0 right-0 w-1/2 bg-rose-200/90" style="clip-path: polygon(100% 0, 0 50%, 100% 100%);"></div>
+                    <div class="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-rose-300 to-rose-200 border-t border-white/40" style="clip-path: polygon(0 100%, 50% 0, 100% 100%);"></div>
+                </div>
+
+                <!-- Cute Stamp on Front -->
+                <div class="absolute bottom-3 left-4 z-30 bg-white/95 px-3 py-1 rounded-xl shadow-sm -rotate-3 border border-rose-200 pointer-events-none">
+                    <span class="font-hand text-sm text-slate-800 font-bold">Untuk: Ms. Angela 🌟</span>
+                </div>
+
+                <!-- Top Opening Flap -->
+                <div class="envelope-flap absolute inset-x-0 top-0 h-3/5 z-30 pointer-events-none" style="filter: drop-shadow(0 6px 8px rgba(0,0,0,0.12));">
+                    <div class="w-full h-full bg-gradient-to-b from-rose-400 to-rose-300 rounded-t-3xl" style="clip-path: polygon(0 0, 100% 0, 50% 100%);"></div>
+                </div>
+
+                <!-- Wax Seal Button -->
+                <div id="wax-seal" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-40 flex flex-col items-center">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-amber-300 via-starYellow to-amber-500 border-4 border-white shadow-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 animate-pulse">
+                        <span class="text-2xl sm:text-3xl">🌟</span>
+                    </div>
+                    <span class="mt-2 px-3 py-1 rounded-full bg-slate-900/90 text-white font-display text-xs tracking-wide shadow-md group-hover:bg-starCoral transition-colors">
+                        KLIK BUKA SURAT
+                    </span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MAIN MULTI-PAGE CONTENT
+    ====================================================================== -->
+    <div id="main-content" class="relative z-10 min-h-screen pb-32 opacity-0 transition-opacity duration-700">
+
+        <!-- =================================================================
+             PAGE 1: POLAROID FRAME + TYPEWRITER PRAYER NOTE
+        ================================================================== -->
+        <section id="page-1" class="step-page active-page max-w-4xl mx-auto px-4 pt-8 sm:pt-12">
+            
+            <div class="text-center mb-8">
+                <span class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-white text-starCoral border-2 border-starCoral font-display font-bold text-xs uppercase tracking-wider mb-2 shadow-sm">
+                    🌟 A Very Special Day
+                </span>
+                <h1 class="font-display text-4xl sm:text-6xl font-bold text-slate-800 tracking-tight leading-tight">
+                    Selamat Ulang Tahun,<br>
+                    <span class="bg-gradient-to-r from-starCoral via-purple-500 to-starBlue bg-clip-text text-transparent">
+                        Ms. Angela!
+                    </span> 🎉
+                </h1>
+                <p class="text-slate-600 max-w-xl mx-auto mt-2 text-sm sm:text-base">
+                    Hari istimewa bagi sosok yang senantiasa sabar mendampingi tumbuh kembang anak-anak dan menyatukan kehangatan keluarga besar <strong>Star Champs</strong>.
+                </p>
+            </div>
+
+            <!-- Polaroid Container -->
+            <div class="flex flex-col items-center justify-center mb-10">
+                <div id="polaroid-tilt" class="polaroid-card relative w-full max-w-sm sm:max-w-md p-4 sm:p-5 pb-6 rounded-3xl rotate-[-1.5deg] hover:rotate-0">
+                    
+                    <div class="washi-tape absolute -top-4 left-1/2 -translate-x-1/2 w-40 h-8 rotate-2 rounded-sm z-20 flex items-center justify-center">
+                        <span class="font-hand text-xs font-bold text-amber-900 tracking-widest">STAR CHAMPS FAMILY</span>
+                    </div>
+
+                    <div class="absolute -top-5 -right-4 z-20 bg-white p-2 rounded-2xl shadow-lg rotate-12 border-2 border-starYellow">
+                        <span class="text-2xl">🎉</span>
+                    </div>
+                    <div class="absolute -bottom-3 -left-3 z-20 bg-starMint text-slate-900 font-display font-bold text-xs px-3 py-1 rounded-2xl shadow-lg -rotate-6 border-2 border-white flex items-center gap-1">
+                        <span>⭐</span> <span>Ms. Angela</span>
+                    </div>
+
+                    <!-- Photo Frame Area -->
+                    <div class="relative w-full aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-amber-100 via-rose-100 to-sky-100 border-2 border-slate-100 group">
+                        <img id="angela-photo" 
+                             src="assets/images/angela-default.svg" 
+                             alt="Foto Polaroid Ms. Angela" 
+                             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+
+                        <label for="upload-polaroid" class="cursor-pointer absolute bottom-3 right-3 bg-white/95 hover:bg-starYellow text-slate-800 font-display font-semibold text-xs px-3.5 py-2 rounded-full shadow-md border border-slate-200 flex items-center gap-1.5 transition">
+                            <span>📷</span> Ganti Foto Ms. Angela
+                        </label>
+                        <input id="upload-polaroid" type="file" accept="image/*" class="hidden" onchange="handlePolaroidUpload(event)">
+                    </div>
+
+                    <!-- Polaroid Caption -->
+                    <div class="pt-4 pb-1 text-center">
+                        <p class="font-hand text-3xl sm:text-4xl font-bold text-slate-800 tracking-wide">
+                            Ms. Angela Tersayang ✨
+                        </p>
+                        <div class="flex items-center justify-center gap-2 mt-0.5 text-xs font-display font-semibold text-slate-500">
+                            <span>🎂 Happy Birthday</span>
+                            <span>•</span>
+                            <span class="text-starCoral font-bold">Star Champs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes Kertas Doa dengan Typewriter -->
+            <div class="relative max-w-2xl mx-auto mt-6">
+                <div class="washi-tape-pink absolute -top-3.5 left-10 w-28 h-7 -rotate-6 rounded-sm z-10"></div>
+                <div class="washi-tape absolute -top-3.5 right-10 w-28 h-7 rotate-6 rounded-sm z-10"></div>
+
+                <div class="lined-paper rounded-3xl p-6 sm:p-10 pl-12 sm:pl-16 border border-amber-200/80 relative rotate-[0.5deg]">
+                    <div class="absolute -top-4 left-5 text-3xl select-none">📎</div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b-2 border-dashed border-rose-200">
+                        <span class="font-display font-bold text-sm sm:text-base text-starCoral flex items-center gap-2">
+                            <span>🙏</span> Secarik Notes Doa Buat Ms. Angela
+                        </span>
+                        <span class="font-hand text-base text-slate-600 bg-amber-100/80 px-3 py-0.5 rounded-full">
+                            Dari: Seluruh Tim Star Champs
+                        </span>
+                    </div>
+
+                    <!-- Typewriter Content Box -->
+                    <div id="typewriter-initial-prayer" class="font-hand text-xl sm:text-2xl text-slate-800 leading-relaxed min-h-[140px]">
+                        <!-- Populated by Typewriter.js on Envelope Open -->
+                    </div>
+
+                    <div class="mt-6 pt-3 flex items-center justify-between text-sm font-hand text-slate-500 border-t border-dashed border-slate-200">
+                        <span>💛 Doa terbaik kami senantiasa menyertai Ms. Angela!</span>
+                        <span class="text-xl">🌟🎂</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Page Button -->
+            <div class="mt-10 flex justify-center">
+                <button onclick="goToStepPage(2)" class="btn-bouncy px-8 py-4 rounded-full bg-gradient-to-r from-starCoral via-pink-500 to-rose-500 text-white font-display font-bold text-base sm:text-lg shadow-xl hover:shadow-2xl flex items-center gap-3 border-4 border-white">
+                    <span>Lanjut ke Papan Komunikasi AAC</span>
+                    <span class="w-8 h-8 rounded-full bg-white/25 flex items-center justify-center">➔</span>
+                </button>
+            </div>
+
+        </section>
+
+        <!-- =================================================================
+             PAGE 2: AAC COMMUNICATION BOARD
+        ================================================================== -->
+        <section id="page-2" class="step-page max-w-4xl mx-auto px-4 pt-8 sm:pt-12">
+            
+            <div class="text-center max-w-2xl mx-auto mb-8">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border-2 border-starBlue shadow-sm text-sky-700 font-display font-bold text-xs mb-3">
+                    <span>🖼️</span> Augmentative & Alternative Communication (AAC)
+                </div>
+                <h2 class="font-display text-3xl sm:text-5xl font-bold text-slate-800 leading-tight">
+                    Papan Komunikasi Visual <span class="text-starBlue">AAC</span> 🌟
+                </h2>
+                <p class="text-slate-600 text-sm sm:text-base mt-2">
+                    Seperti saat anak-anak menyusun simbol gambar untuk menyampaikan perasaan mereka—ketuk kartu AAC di bawah untuk menyusun rangkaian ucapan ulang tahun buat Ms. Angela!
+                </p>
+            </div>
+
+            <!-- Board Container -->
+            <div class="bg-white/95 backdrop-blur-md rounded-[2.5rem] p-5 sm:p-8 border-4 border-sky-300 shadow-2xl">
+                
+                <!-- Sentence Strip -->
+                <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 sm:p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-inner">
+                    <div id="aac-sentence-strip" class="flex flex-wrap items-center gap-2.5 min-h-[64px] w-full sm:w-auto flex-1 px-2">
+                        <div id="aac-empty-hint" class="flex items-center gap-3 text-slate-400 font-display text-xs sm:text-sm">
+                            <span class="text-2xl animate-bounce">👇</span>
+                            <span>Ketuk kartu gambar di bawah untuk menyusun kartu visual AAC...</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                        <button onclick="playAacSentence()" class="btn-bouncy flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-starMint hover:bg-teal-500 text-slate-900 hover:text-white font-display font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-1.5">
+                            <span>🔊</span> <span>Bunyikan Pesan</span>
+                        </button>
+                        <button onclick="clearAacSentence()" class="btn-bouncy px-3.5 py-2.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 font-display font-bold text-xs sm:text-sm">
+                            Hapus
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AAC Symbol Grid -->
+                <div id="aac-board-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+                    <!-- Populated dynamically by JS -->
+                </div>
+
+                <!-- Speech Output Bubble -->
+                <div id="aac-output-bubble" class="mt-6 bg-gradient-to-r from-amber-50 via-rose-50 to-sky-50 border-2 border-amber-200 rounded-2xl p-4 flex items-center justify-center gap-3 text-center shadow-sm">
+                    <img id="aac-active-img" src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Hearts.png" alt="AAC Icon" class="w-9 h-9 object-contain shrink-0" onerror="this.style.display='none'">
+                    <p id="aac-output-text" class="font-display font-semibold text-slate-700 text-sm sm:text-base">
+                        Pilih gambar objek AAC di atas untuk melihat animasi & pesannya!
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-2xl mx-auto">
+                <button onclick="goToStepPage(1)" class="btn-bouncy w-full sm:w-auto px-6 py-3.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 font-display font-bold text-sm shadow-md border-2 border-slate-200 flex items-center justify-center gap-2">
+                    <span>⬅</span> <span>Kembali ke Polaroid</span>
+                </button>
+                <button onclick="goToStepPage(3)" class="btn-bouncy w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-starCoral via-pink-500 to-rose-500 text-white font-display font-bold text-base shadow-xl flex items-center justify-center gap-3 border-4 border-white">
+                    <span>Lanjut ke Doa 11 Staf Star Champs</span>
+                    <span class="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center">➔</span>
+                </button>
+            </div>
+
+        </section>
+
+        <!-- =================================================================
+             PAGE 3: 11 STAFF MINI-ENVELOPES + POP-UP TYPEWRITER MODAL
+        ================================================================== -->
+        <section id="page-3" class="step-page max-w-5xl mx-auto px-4 pt-8 sm:pt-12">
+            
+            <div class="text-center max-w-2xl mx-auto mb-8">
+                <span class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-rose-100 text-starCoral font-display font-bold text-xs uppercase tracking-wider mb-2">
+                    📬 Kolase Surat Amplop Mini (11 Staf Star Champs)
+                </span>
+                <h2 class="font-display text-3xl sm:text-4xl font-bold text-slate-800">
+                    Buka Amplop Kecil Buat Baca Doa Staf! 💌
+                </h2>
+                <p class="text-slate-600 text-sm sm:text-base mt-2">
+                    Setiap staf membungkus ucapan mereka dalam amplop kecil khusus. Klik amplop untuk memunculkan pop-up surat terbuka dengan <strong>animasi typewriter</strong>!
+                </p>
+            </div>
+
+            <!-- Mini Envelopes Grid -->
+            <div id="staff-envelopes-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 max-w-5xl mx-auto">
+                <!-- Populated dynamically by JS -->
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-3xl mx-auto">
+                <button onclick="goToStepPage(2)" class="btn-bouncy w-full sm:w-auto px-6 py-3.5 rounded-full bg-white hover:bg-slate-100 text-slate-700 font-display font-bold text-sm shadow-md border-2 border-slate-200 flex items-center justify-center gap-2">
+                    <span>⬅</span> <span>Kembali ke Papan AAC</span>
+                </button>
+                <button onclick="goToStepPage(4)" class="btn-bouncy w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-amber-400 via-starCoral to-purple-500 text-white font-display font-bold text-base shadow-xl flex items-center justify-center gap-3 border-4 border-white">
+                    <span>Lanjut ke Harapan Bersama</span>
+                    <span class="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center">➔</span>
+                </button>
+            </div>
+
+        </section>
+
+        <!-- =================================================================
+             PAGE 4: HEARTFELT HOPES & CAKE CANDLE BLOWING
+        ================================================================== -->
+        <section id="page-4" class="step-page max-w-4xl mx-auto px-4 pt-8 sm:pt-12">
+            
+            <div class="relative bg-[#FFFDF9] rounded-[2.5rem] p-7 sm:p-12 shadow-2xl border-4 border-amber-300 overflow-hidden">
+                
+                <div class="washi-tape absolute -top-3 left-1/2 -translate-x-1/2 w-48 h-8 rounded-sm rotate-1"></div>
+
+                <div class="text-center mb-8 relative z-10 pt-2">
+                    <div class="flex items-center justify-center gap-2.5 mb-3 text-3xl">
+                        <span>⭐</span> <span>❤️</span> <span>🎂</span>
+                    </div>
+                    <h2 class="font-display text-3xl sm:text-5xl font-bold leading-tight text-slate-800">
+                        Harapan Tulus Kami Bersama <span class="text-starCoral">Ms. Angela</span>
+                    </h2>
+                    <p class="text-slate-500 text-sm sm:text-base mt-1 font-medium">
+                        Dari seluruh rekan staf dan manajemen Star Champs
+                    </p>
+                </div>
+
+                <!-- Heartfelt Letter Content -->
+                <div class="lined-paper relative z-10 max-w-2xl mx-auto space-y-5 text-slate-800 font-hand text-xl sm:text-2xl leading-relaxed p-6 sm:p-10 pl-12 sm:pl-16 rounded-3xl border border-amber-200">
+                    <p>
+                        <strong>Ms. Angela yang kami sayangi,</strong>
+                    </p>
+                    <p>
+                        Di balik ramainya suara tawa anak-anak di ruang terapi wicara dan kesibukan kita sehari-hari, ada satu hal yang ingin kami sampaikan dari lubuk hati paling dalam: <strong>Terima kasih banyak sudah hadir, membimbing, dan memimpin kami semua di sini.</strong>
+                    </p>
+                    <p>
+                        Harapan terbesar kami di pertambahan usia Ms. Angela kali ini adalah semoga Ms. senantiasa dikaruniai kesehatan, kelapangan hati, dan inspirasi tak henti-hentinya untuk <strong>memajukan Star Champs</strong> melangkah semakin tinggi.
+                    </p>
+                    <p>
+                        Kami semua mendoakan agar Ms. Angela terus menjadi <strong>role model dan teladan yang hangat</strong> bagi seluruh staf maupun manajemen—sosok pemimpin yang mengayomi dengan hati dan merangkul kami seperti keluarga sendiri.
+                    </p>
+                    <p class="pt-3 border-t-2 border-dashed border-rose-200 font-bold text-starCoral">
+                        "Kami selalu bangga dan bahagia bisa terus melangkah bersama Ms. Angela!" 💛
+                    </p>
+                </div>
+
+                <!-- Interactive Birthday Cake & Candle -->
+                <div class="relative z-10 mt-10 text-center">
+                    <div class="inline-flex flex-col items-center">
+                        <div onclick="blowCandleFinale()" class="cursor-pointer group relative mb-4 select-none">
+                            <div class="text-xs font-display font-bold text-starCoral mb-2 animate-bounce" id="candle-hint">
+                                👇 Klik lilin kue untuk tiup lilin & rayakan!
+                            </div>
+                            <svg class="w-36 h-36 mx-auto drop-shadow-xl" viewBox="0 0 200 200">
+                                <ellipse cx="100" cy="170" rx="75" ry="14" fill="#CBD5E1"/>
+                                <rect x="45" y="115" width="110" height="50" rx="12" fill="#FF6B8B"/>
+                                <path d="M45,120 Q60,138 72,120 Q86,140 100,120 Q114,140 128,120 Q142,138 155,120 L155,115 L45,115 Z" fill="#FFFDF7"/>
+                                <rect x="60" y="78" width="80" height="40" rx="10" fill="#FFD166"/>
+                                <path d="M60,84 Q75,98 88,84 Q100,98 112,84 Q125,98 140,84 L140,78 L60,78 Z" fill="#FFFDF7"/>
+                                <rect x="94" y="44" width="12" height="35" rx="4" fill="#4EA8DE"/>
+                                <line x1="94" y1="54" x2="106" y2="50" stroke="#FFFFFF" stroke-width="3"/>
+                                <line x1="94" y1="66" x2="106" y2="62" stroke="#FFFFFF" stroke-width="3"/>
+                                <g id="candle-flame" class="flame">
+                                    <path d="M100,18 C108,28 110,38 100,43 C90,38 92,28 100,18 Z" fill="#FF9F1C"/>
+                                    <path d="M100,25 C104,31 105,37 100,41 C95,37 96,31 100,25 Z" fill="#FFF3B0"/>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <button id="blow-btn" onclick="blowCandleFinale()" class="btn-bouncy px-8 py-4 rounded-full bg-gradient-to-r from-starYellow via-amber-400 to-orange-400 text-slate-900 font-display font-bold text-base sm:text-lg shadow-xl flex items-center gap-2 border-2 border-white">
+                            <span>🎂</span> Tiup Lilin & Rayakan Bersama Ms. Angela!
+                        </button>
+
+                        <p id="finale-celebration-text" class="hidden mt-4 font-display text-lg text-teal-600 font-bold animate-bounce">
+                            🎉 Selamat Ulang Tahun Ms. Angela! Kami Semua Sayang Ms. Angela! 🌟🤗
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Unlocked Banner to Photobooth Online -->
+                <div id="photobooth-unlock-banner" class="relative z-10 mt-10 p-5 rounded-2xl bg-gradient-to-r from-pink-100 via-amber-100 to-sky-100 border-2 border-starCoral/40 text-center">
+                    <h3 class="font-display font-bold text-xl text-slate-800 mb-1">
+                        📸 Abadikan Momen Spesial di Photobooth Online 9:16!
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-600 mb-3">
+                        Bikin foto portrait aesthetic 9:16 bertema Star Champs, pasang stiker lucu, lalu langsung download atau share ke Instagram Stories!
+                    </p>
+                    <button onclick="goToStepPage(5)" class="btn-bouncy px-8 py-3.5 rounded-full bg-gradient-to-r from-starCoral to-rose-600 text-white font-display font-bold text-sm sm:text-base shadow-lg flex items-center justify-center gap-2 mx-auto">
+                        <span>Buka Photobooth Online 9:16</span>
+                        <span>➔</span>
+                    </button>
+                </div>
+
+                <!-- Navigation Back -->
+                <div class="mt-8 pt-6 border-t border-amber-200/70 flex flex-wrap items-center justify-between gap-3">
+                    <button onclick="goToStepPage(3)" class="btn-bouncy px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                        <span>⬅</span> <span>Kembali ke Doa Staf</span>
+                    </button>
+                    <button onclick="goToStepPage(5)" class="btn-bouncy px-5 py-2.5 rounded-full bg-starCoral hover:bg-rose-600 text-white font-display font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-md">
+                        <span>📸</span> <span>Langsung ke Photobooth</span> <span>➔</span>
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- =================================================================
+             PAGE 5: ONLINE PHOTOBOOTH STUDIO 9:16 (PORTRAIT FOR IG STORIES)
+        ================================================================== -->
+        <section id="page-5" class="step-page max-w-5xl mx-auto px-4 pt-8 sm:pt-12">
+            
+            <div class="text-center max-w-2xl mx-auto mb-8">
+                <span class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white text-starCoral border-2 border-starCoral font-display font-bold text-xs uppercase tracking-wider mb-2 shadow-sm">
+                    📸 9:16 Instagram Story Photobooth
+                </span>
+                <h2 class="font-display text-3xl sm:text-5xl font-bold text-slate-800 leading-tight">
+                    Online Photobooth <span class="text-starCoral">9:16</span> ✨
+                </h2>
+                <p class="text-slate-600 text-sm sm:text-base mt-2">
+                    Ambil foto langsung pakai kamera HP / laptop atau upload fotomu. Pilih template frame, tambahkan stiker, dan langsung download atau bagikan ke Instagram Story!
+                </p>
+            </div>
+
+            <!-- Photobooth Studio Layout Grid -->
+            <div class="bg-white/95 backdrop-blur-md rounded-[2.5rem] p-5 sm:p-8 border-4 border-amber-300 shadow-2xl">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    <!-- Left: 9:16 Viewfinder Frame -->
+                    <div class="lg:col-span-5 flex flex-col items-center">
+                        
+                        <div id="photobooth-frame" class="photobooth-frame-9-16 relative w-full filter-normal">
+                            
+                            <!-- Video Webcam Stream -->
+                            <video id="photobooth-video" playsinline autoplay muted class="hidden"></video>
+
+                            <!-- Image Preview (Uploaded or Captured) -->
+                            <img id="photobooth-img-preview" src="assets/images/angela-default.svg" alt="Preview Foto" class="block w-full h-full object-cover">
+
+                            <!-- Initial Placeholder / Guide (if camera off) -->
+                            <div id="photobooth-placeholder" class="hidden absolute inset-0 z-5 flex flex-col items-center justify-center p-6 text-center bg-slate-900/60 text-white">
+                                <span class="text-5xl mb-2">📸</span>
+                                <p class="font-display font-bold text-base">Kamera Sedang Tidak Aktif</p>
+                                <p class="text-xs text-slate-300 mt-1">Klik "Buka Kamera" atau "Pilih Foto" di panel samping</p>
+                            </div>
+
+                            <!-- Screen Flash Effect -->
+                            <div id="camera-flash-screen"></div>
+
+                            <!-- 3-2-1 Countdown Overlay -->
+                            <div id="countdown-overlay">
+                                <span id="countdown-number" class="countdown-number">3</span>
+                            </div>
+
+                            <!-- Draggable Live Stickers Container -->
+                            <div id="stickers-overlay-container" class="absolute inset-0 z-20 pointer-events-auto"></div>
+
+                            <!-- Live Template Decorative Graphics Overlay -->
+                            <div id="template-overlay-content" class="template-overlay">
+                                <!-- Populated dynamically by setTemplate() -->
+                                <div class="flex items-center justify-between w-full">
+                                    <span class="bg-white/95 px-3 py-1 rounded-full text-[11px] font-display font-bold text-starCoral shadow-md border border-rose-200">
+                                        🌟 Star Champs Therapy
+                                    </span>
+                                    <span class="text-xl">🎂🎈</span>
+                                </div>
+                                <div class="mt-auto text-center w-full pb-2">
+                                    <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-lg border-2 border-starYellow">
+                                        <p class="font-hand text-2xl font-bold text-slate-800 leading-tight">
+                                            "Happy Birthday Ms. Angela!"
+                                        </p>
+                                        <p id="live-frame-caption" class="text-xs font-display font-semibold text-starCoral mt-0.5">
+                                            Ms. Angela Tersayang ✨
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Quick Cam Action Trigger Under Viewfinder -->
+                        <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+                            <button id="btn-capture" onclick="photobooth.takePhoto()" class="hidden btn-bouncy px-6 py-2.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white font-display font-bold text-xs sm:text-sm shadow-md flex items-center gap-1.5">
+                                <span>📸 Ambil Foto (3s)</span>
+                            </button>
+                            <button id="btn-retake" onclick="photobooth.retakePhoto()" class="hidden btn-bouncy px-5 py-2.5 rounded-full bg-slate-800 hover:bg-slate-900 text-white font-display font-bold text-xs sm:text-sm shadow-md flex items-center gap-1.5">
+                                <span>🔄 Ambil Ulang</span>
+                            </button>
+                            <button id="btn-switch-cam" onclick="photobooth.switchCamera()" class="hidden btn-bouncy px-4 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 font-display font-bold text-xs shadow-sm flex items-center gap-1">
+                                <span>🔄 Balik Kamera</span>
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- Right: Photobooth Control Panel -->
+                    <div class="lg:col-span-7 space-y-6">
+                        
+                        <!-- 1. Camera & Upload Section -->
+                        <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
+                            <h3 class="font-display font-bold text-sm sm:text-base text-slate-800 mb-3 flex items-center gap-2">
+                                <span>📷</span> Sumber Foto
+                            </h3>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button onclick="photobooth.startCamera()" class="btn-bouncy px-5 py-2.5 rounded-xl bg-starCoral hover:bg-rose-600 text-white font-display font-bold text-xs sm:text-sm shadow-md flex items-center gap-1.5">
+                                    <span>🎥 Buka Kamera</span>
+                                </button>
+                                
+                                <label for="upload-photobooth-file" class="btn-bouncy cursor-pointer px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-display font-bold text-xs sm:text-sm border-2 border-slate-200 shadow-sm flex items-center gap-1.5">
+                                    <span>📁 Upload dari Galeri</span>
+                                </label>
+                                <input id="upload-photobooth-file" type="file" accept="image/*" class="hidden" onchange="photobooth.handleUpload(event)">
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-2 font-medium">
+                                *Tips: Izinkan akses webcam browser atau pilih foto potret favoritmu langsung dari galeri HP / laptop.
+                            </p>
+                        </div>
+
+                        <!-- 2. Template Selector -->
+                        <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
+                            <h3 class="font-display font-bold text-sm sm:text-base text-slate-800 mb-3 flex items-center gap-2">
+                                <span>🎨</span> Pilih Template Frame 9:16
+                            </h3>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="photobooth.setTemplate('star-champs')" data-template="star-champs" class="template-pill active">
+                                    🌟 Star Champs Pastel
+                                </button>
+                                <button onclick="photobooth.setTemplate('aesthetic-polaroid')" data-template="aesthetic-polaroid" class="template-pill">
+                                    📸 Polaroid Strip
+                                </button>
+                                <button onclick="photobooth.setTemplate('therapy-wonderland')" data-template="therapy-wonderland" class="template-pill">
+                                    💬 Therapy Wonderland
+                                </button>
+                                <button onclick="photobooth.setTemplate('golden-gala')" data-template="golden-gala" class="template-pill">
+                                    👑 Golden Celebration
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3. Filter Selector -->
+                        <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
+                            <h3 class="font-display font-bold text-sm sm:text-base text-slate-800 mb-2 flex items-center gap-2">
+                                <span>✨</span> Efek Filter Foto
+                            </h3>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="photobooth.setFilter('filter-normal')" data-filter="filter-normal" class="filter-btn active">Normal</button>
+                                <button onclick="photobooth.setFilter('filter-warm')" data-filter="filter-warm" class="filter-btn">Warm Glow ☀️</button>
+                                <button onclick="photobooth.setFilter('filter-pastel')" data-filter="filter-pastel" class="filter-btn">Pastel Dream 🌸</button>
+                                <button onclick="photobooth.setFilter('filter-rosy')" data-filter="filter-rosy" class="filter-btn">Rosy Blush 💖</button>
+                                <button onclick="photobooth.setFilter('filter-vintage')" data-filter="filter-vintage" class="filter-btn">Vintage Film 🎞️</button>
+                                <button onclick="photobooth.setFilter('filter-bw')" data-filter="filter-bw" class="filter-btn">B&W Classic 🖤</button>
+                            </div>
+                        </div>
+
+                        <!-- 4. Stickers Tray -->
+                        <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="font-display font-bold text-sm sm:text-base text-slate-800 flex items-center gap-2">
+                                    <span>🥳</span> Tambah Stiker (Bisa Digeser!)
+                                </h3>
+                                <span class="text-[11px] text-slate-400 font-semibold">Ketuk stiker untuk tempel</span>
+                            </div>
+                            <div id="stickers-tray" class="flex items-center gap-2 overflow-x-auto pb-1">
+                                <!-- Populated by photobooth.js -->
+                            </div>
+                        </div>
+
+                        <!-- 5. Custom Caption Text -->
+                        <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
+                            <label class="block font-display font-bold text-sm text-slate-800 mb-1 flex items-center gap-1.5">
+                                <span>✍️</span> Tulisan Ucapan / Nama Anda di Frame
+                            </label>
+                            <input id="photobooth-custom-text" type="text" placeholder="Contoh: Dari Miss Riska & Anak-Anak Star Champs 🌟" class="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-starCoral outline-none text-xs sm:text-sm font-medium">
+                        </div>
+
+                        <!-- 6. Action Export Buttons -->
+                        <div class="pt-2 flex flex-col sm:flex-row items-center gap-3.5">
+                            <button onclick="photobooth.downloadPhoto()" class="btn-bouncy w-full sm:flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-display font-bold text-sm sm:text-base shadow-xl flex items-center justify-center gap-2">
+                                <span>⬇️ Download Foto (9:16 HQ)</span>
+                            </button>
+                            <button onclick="photobooth.shareToInstagram()" class="btn-bouncy w-full sm:flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 hover:opacity-95 text-white font-display font-bold text-sm sm:text-base shadow-xl flex items-center justify-center gap-2">
+                                <span>📤 Share ke Instagram Stories</span>
+                            </button>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Footer Navigation inside Page 5 -->
+                <div class="mt-10 pt-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                    <button onclick="goToStepPage(4)" class="btn-bouncy px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                        <span>⬅</span> <span>Kembali ke Kue & Lilin</span>
+                    </button>
+                    <button onclick="goToStepPage(1)" class="btn-bouncy px-5 py-2.5 rounded-full bg-amber-100 hover:bg-starYellow text-amber-900 font-display font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                        <span>📸</span> <span>Kembali ke Halaman Pertama</span>
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+    <!-- =====================================================================
+         BOTTOM WALKING SPEECH THERAPY PARADE (FIXED)
+    ====================================================================== -->
+    <div class="fixed bottom-0 left-0 right-0 h-16 pointer-events-none z-40 overflow-hidden">
+        <div class="walking-parade flex items-end gap-6 absolute bottom-1">
+            <div class="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-3.5 py-1.5 rounded-2xl shadow-lg border-2 border-starYellow bobble-step pointer-events-auto cursor-pointer" onclick="triggerSpeechPop('Selamat Ulang Tahun Ms. Angela! 🎈')">
+                <span class="text-xl">👧</span>
+                <div class="text-xs font-display font-bold text-slate-700">
+                    <span class="text-starCoral">"Happy Birthday Ms. Angela!"</span> 💬
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-3.5 py-1.5 rounded-2xl shadow-lg border-2 border-starMint bobble-step-delayed pointer-events-auto cursor-pointer" onclick="triggerSpeechPop('Makasih udah sabar nemenin kami belajar ngobrol ya Ms! 🌟')">
+                <span class="text-xl">🥰</span>
+                <span class="text-xs font-display font-bold text-teal-700">"Main sambil belajar bareng Ms. Angela seru banget!"</span>
+            </div>
+
+            <div class="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-3.5 py-1.5 rounded-2xl shadow-lg border-2 border-starBlue bobble-step pointer-events-auto cursor-pointer" onclick="triggerSpeechPop('We Love You Ms. Angela! Star Champs! 🏆')">
+                <span class="text-xl">⭐</span>
+                <span class="text-xs font-display font-bold text-sky-700">"Terima kasih sudah sabar ajarin aku bicara, Ms!" 💛</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Speech Toast -->
+    <div id="speech-toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform translate-y-4">
+        <div class="bg-slate-900 text-white font-display font-medium text-xs sm:text-sm px-5 py-2.5 rounded-full shadow-xl border-2 border-starYellow flex items-center gap-2">
+            <span>💬</span>
+            <span id="speech-toast-text">Selamat Ulang Tahun Ms. Angela!</span>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         POP-UP MODAL FOR STAFF LETTER & PRAYER (TYPEWRITER ENABLED)
+    ====================================================================== -->
+    <div id="letter-popup-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm">
+        <div id="letter-popup-box" class="letter-modal-animate relative max-w-xl w-full bg-[#FFFDF7] rounded-[2rem] p-6 sm:p-8 shadow-2xl border-4 border-starYellow">
+            
+            <div class="washi-tape absolute -top-4 left-1/2 -translate-x-1/2 w-36 h-7 rounded-sm rotate-1"></div>
+
+            <button onclick="closeLetterPopup()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-600 font-bold flex items-center justify-center transition">
+                ✕
+            </button>
+
+            <!-- Sender Header -->
+            <div class="flex items-center gap-3.5 pb-4 mb-4 border-b-2 border-dashed border-amber-200 pr-8">
+                <div class="w-14 h-14 rounded-2xl bg-amber-50 border-2 border-amber-200 shadow-sm flex items-center justify-center p-2 shrink-0">
+                    <img id="popup-avatar-img" src="" alt="Avatar" class="w-full h-full object-contain" onerror="this.style.display='none'">
+                </div>
+                <div>
+                    <span id="popup-counter-badge" class="inline-block text-[11px] font-display font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-starCoral mb-0.5">
+                        Doa Staf 1 dari 11
+                    </span>
+                    <h3 id="popup-author-name" class="font-display font-bold text-xl sm:text-2xl text-slate-800 leading-tight">
+                        Miss Riska
+                    </h3>
+                    <p id="popup-author-role" class="text-xs font-semibold text-slate-500">
+                        Keluarga Star Champs
+                    </p>
+                </div>
+            </div>
+
+            <!-- Lined Paper with Typewriter Message -->
+            <div class="lined-paper rounded-2xl p-5 sm:p-6 pl-11 sm:pl-12 border border-amber-200/70 max-h-[48vh] overflow-y-auto">
+                <p id="popup-letter-message" class="font-hand text-xl sm:text-2xl text-slate-800 leading-relaxed">
+                    <!-- Populated by Typewriter -->
+                </p>
+            </div>
+
+            <!-- Pop-up Actions: Skip, Prev, Next -->
+            <div class="mt-5 flex flex-wrap items-center justify-between gap-2.5">
+                <button onclick="prevPopupLetter()" class="btn-bouncy px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                    <span>⬅</span> <span>Sebelumnya</span>
+                </button>
+
+                <button onclick="skipStaffTypewriter()" class="px-3.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-display font-semibold text-xs transition">
+                    ⏩ Lewati Ngetik
+                </button>
+
+                <button onclick="nextPopupLetter()" class="btn-bouncy px-5 py-2.5 rounded-xl bg-gradient-to-r from-starCoral to-pink-500 hover:opacity-95 text-white font-display font-bold text-xs sm:text-sm shadow-md flex items-center gap-1.5">
+                    <span>Doa Selanjutnya</span> <span>➔</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL FOR ADDING A NEW STAFF LETTER TO COLLAGE
+    ====================================================================== -->
+    <div id="add-letter-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border-4 border-starYellow">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-display text-xl font-bold text-slate-800">✍️ Tambah Surat Doa Baru</h3>
+                <button onclick="closeAddLetterModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 font-bold">✕</button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">
+                Tulis ucapan dan doa tulus buat Ms. Angela. Suratmu akan langsung terdaftar di amplop kolase!
+            </p>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-display font-bold text-slate-700 mb-1">Nama Panggilan</label>
+                    <input id="new-letter-author" type="text" placeholder="Contoh: Miss Rina" class="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-starCoral outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-display font-bold text-slate-700 mb-1">Catatan Singkat</label>
+                    <input id="new-letter-badge" type="text" placeholder="Contoh: Tim Star Champs 🌟" class="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-starCoral outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-display font-bold text-slate-700 mb-1">Isi Doa & Ucapan Buat Ms. Angela</label>
+                    <textarea id="new-letter-body" rows="4" placeholder="Tulis pesan hangat buat Ms. Angela..." class="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-starCoral outline-none text-sm"></textarea>
+                </div>
+                <button onclick="saveNewLetter()" class="btn-bouncy w-full py-3 rounded-xl bg-starCoral hover:bg-rose-600 text-white font-display font-bold text-sm shadow-md">
+                    💌 Simpan ke Kolase Surat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL PANDUAN SHARE INSTAGRAM STORY
+    ====================================================================== -->
+    <div id="instagram-guide-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm">
+        <div class="share-modal-content max-w-md w-full p-6 sm:p-8 relative">
+            <button onclick="photobooth.closeShareGuide()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 font-bold">✕</button>
+            
+            <div class="text-center mb-5">
+                <span class="text-4xl mb-2 inline-block">📸✨</span>
+                <h3 class="font-display font-bold text-2xl text-slate-800">
+                    Foto Siap untuk Instagram Story!
+                </h3>
+                <p class="text-xs text-slate-600 mt-1">
+                    Format portrait 9:16 sudah sempurna dan berkualitas tinggi untuk diposting.
+                </p>
+            </div>
+
+            <div class="space-y-3 bg-amber-50/70 p-4 rounded-2xl border border-amber-200 text-xs sm:text-sm text-slate-700">
+                <div class="flex items-start gap-2.5">
+                    <span class="font-bold text-starCoral">1.</span>
+                    <span>Foto sudah otomatis tersimpan di galeri / folder Downloads perangkat Anda.</span>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <span class="font-bold text-starCoral">2.</span>
+                    <span>Buka aplikasi <strong>Instagram</strong> ➔ Geser untuk membuat <strong>Story Baru</strong>.</span>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <span class="font-bold text-starCoral">3.</span>
+                    <span>Pilih foto photobooth yang baru diunduh tadi, lalu tag akun <strong>@msangela</strong> dan <strong>@starchamps</strong>!</span>
+                </div>
+            </div>
+
+            <!-- Copy Caption Prompt -->
+            <div class="mt-5">
+                <button onclick="photobooth.copyCaption()" class="btn-bouncy w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 text-white font-display font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2">
+                    <span>📋 Salin Template Caption Ucapan</span>
+                </button>
+                <button onclick="photobooth.closeShareGuide()" class="w-full mt-2 py-2.5 text-xs text-slate-500 hover:text-slate-800 font-display font-semibold transition">
+                    Tutup Panduan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         SCRIPTS: MODULAR ARCHITECTURE
+    ====================================================================== -->
+    <script src="js/data.js"></script>
+    <script src="js/three-scene.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/typewriter.js"></script>
+    <script src="js/photobooth.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
+</html>
