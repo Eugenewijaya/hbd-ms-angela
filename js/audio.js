@@ -1,216 +1,134 @@
 /* ==========================================================================
-   AUDIO.JS - Audio Manager (hbd.mp3 + Web Audio API Synthesizer Fallback)
+   audio.js — musik latar assets/audio/hbd.mp3 (+ fallback synth bila file
+   tidak ada) dan efek suara UI yang halus.
    ========================================================================== */
-
 (function () {
-    let audioCtx = null;
-    let bgmAudioElement = null;
-    let isPlaying = false;
-    let synthLoopTimeout = null;
-    let synthTimeouts = [];
-    let isUsingFallbackSynth = false;
+    const SC = (window.SC = window.SC || {});
+    const SRC = "assets/audio/hbd.mp3";
 
-    // Web Audio Context Getter (unlocked on first user interaction)
-    function getAudioContext() {
-        if (!audioCtx) {
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioContextClass) {
-                audioCtx = new AudioContextClass();
-            }
+    let ctx = null, bgm = null, playing = false, useSynth = false;
+    let synthMaster = null, synthTimer = 0;
+
+    function ac() {
+        if (!ctx) {
+            const C = window.AudioContext || window.webkitAudioContext;
+            if (C) ctx = new C();
         }
-        if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-        return audioCtx;
+        if (ctx && ctx.state === "suspended") ctx.resume();
+        return ctx;
     }
 
-    // Play single synthesized tone (used for SFX & Synth fallback)
-    function playTone(freq, duration = 0.25, type = 'triangle', delay = 0, volume = 0.12) {
-        try {
-            const ctx = getAudioContext();
-            if (!ctx) return;
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
-
-            gain.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
-            gain.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + delay + 0.02);
-            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + duration);
-
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-
-            osc.start(ctx.currentTime + delay);
-            osc.stop(ctx.currentTime + delay + duration + 0.02);
-        } catch (e) {
-            // Audio context not ready yet
-        }
+    function tone(freq, dur, type, delay, vol, dest) {
+        const c = ac();
+        if (!c) return;
+        const t0 = c.currentTime + (delay || 0);
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = type || "triangle";
+        o.frequency.setValueAtTime(freq, t0);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(vol || 0.1, t0 + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(g); g.connect(dest || c.destination);
+        o.start(t0); o.stop(t0 + dur + 0.03);
     }
 
-    // Sound Effects
-    function playChimeBurst() {
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        notes.forEach((f, idx) => playTone(f, 0.32, 'triangle', idx * 0.07, 0.15));
-    }
-
-    function playPaperFlipSound() {
-        playTone(440, 0.08, 'sine', 0, 0.08);
-        playTone(587.33, 0.1, 'triangle', 0.04, 0.08);
-    }
-
-    function playCameraShutterSound() {
-        playTone(300, 0.05, 'square', 0, 0.18);
-        playTone(900, 0.08, 'sine', 0.05, 0.22);
-    }
-
-    function playTypewriterClickSound() {
-        playTone(1200 + Math.random() * 400, 0.03, 'sine', 0, 0.03);
-    }
-
-    // Initialize Background Music Engine
-    function initAudioManager() {
-        bgmAudioElement = new Audio('assets/audio/hbd.mp3');
-        bgmAudioElement.loop = true;
-        bgmAudioElement.volume = 0.75;
-
-        // Fallback to Web Audio Synthesizer if hbd.mp3 cannot be loaded (e.g. not placed yet)
-        bgmAudioElement.addEventListener('error', function () {
-            console.log('assets/audio/hbd.mp3 not found or failed to load. Using Web Audio Music Box Fallback.');
-            isUsingFallbackSynth = true;
-            if (isPlaying) {
-                startSynthHappyBirthdayLoop();
-            }
-        });
-
-        setupMusicWidgetUI();
-    }
-
-    // Start Playing Music
-    function startMusic() {
-        if (isPlaying) return;
-        getAudioContext();
-
-        if (!isUsingFallbackSynth && bgmAudioElement) {
-            bgmAudioElement.play()
-                .then(() => {
-                    isPlaying = true;
-                    updateMusicWidgetUI(true);
-                })
-                .catch((err) => {
-                    // Browser blocked or file failed, try synth
-                    console.log('Audio element play deferred or fallback active:', err);
-                    isUsingFallbackSynth = true;
-                    isPlaying = true;
-                    startSynthHappyBirthdayLoop();
-                    updateMusicWidgetUI(true);
-                });
-        } else {
-            isPlaying = true;
-            startSynthHappyBirthdayLoop();
-            updateMusicWidgetUI(true);
-        }
-    }
-
-    // Pause Music
-    function pauseMusic() {
-        isPlaying = false;
-        if (bgmAudioElement) {
-            bgmAudioElement.pause();
-        }
-        stopSynthLoop();
-        updateMusicWidgetUI(false);
-    }
-
-    // Toggle Music
-    function toggleMusic() {
-        if (isPlaying) {
-            pauseMusic();
-        } else {
-            startMusic();
-        }
-    }
-
-    // Web Audio Music Box "Happy Birthday" Melody Synthesizer Loop
-    function startSynthHappyBirthdayLoop() {
-        stopSynthLoop();
-        if (!isPlaying) return;
-
-        // Song notes: [Frequency, Duration (s), Offset (s)]
-        const song = [
-            [392.00, 0.3, 0.0], [392.00, 0.3, 0.38], [440.00, 0.55, 0.75], [392.00, 0.55, 1.45], [523.25, 0.55, 2.15], [493.88, 0.9, 2.85],
-            [392.00, 0.3, 4.0], [392.00, 0.3, 4.38], [440.00, 0.55, 4.75], [392.00, 0.55, 5.45], [587.33, 0.55, 6.15], [523.25, 0.9, 6.85],
-            [392.00, 0.3, 8.0], [392.00, 0.3, 8.38], [783.99, 0.55, 8.75], [659.25, 0.55, 9.45], [523.25, 0.55, 10.15], [493.88, 0.55, 10.85], [440.00, 0.85, 11.55],
-            [698.46, 0.3, 12.8], [698.46, 0.3, 13.18], [659.25, 0.55, 13.55], [523.25, 0.55, 14.25], [587.33, 0.55, 14.95], [523.25, 1.1, 15.65]
-        ];
-
-        song.forEach(([freq, dur, offset]) => {
-            const t = setTimeout(() => {
-                if (isPlaying) {
-                    playTone(freq, dur, 'triangle', 0, 0.1);
-                    playTone(freq * 2, dur * 0.7, 'sine', 0, 0.03); // gentle harmonic overtone
-                }
-            }, offset * 1000);
-            synthTimeouts.push(t);
-        });
-
-        // Continuous Loop every ~17.5 seconds
-        synthLoopTimeout = setTimeout(() => {
-            if (isPlaying) {
-                startSynthHappyBirthdayLoop();
-            }
-        }, 17500);
-    }
-
-    function stopSynthLoop() {
-        if (synthLoopTimeout) {
-            clearTimeout(synthLoopTimeout);
-            synthLoopTimeout = null;
-        }
-        synthTimeouts.forEach(t => clearTimeout(t));
-        synthTimeouts = [];
-    }
-
-    // UI Controller Setup
-    function setupMusicWidgetUI() {
-        const widget = document.getElementById('floating-music-widget');
-        if (!widget) return;
-
-        widget.addEventListener('click', toggleMusic);
-    }
-
-    function updateMusicWidgetUI(playing) {
-        const widget = document.getElementById('floating-music-widget');
-        const text = document.getElementById('music-status-text');
-        if (!widget) return;
-
-        if (playing) {
-            widget.classList.add('music-playing');
-            if (text) text.textContent = "BGM Nyala 🎵";
-        } else {
-            widget.classList.remove('music-playing');
-            if (text) text.textContent = "BGM Jeda ⏸️";
-        }
-    }
-
-    // Auto-unlock music on any first user click or tap anywhere
-    ['click', 'touchstart', 'keydown'].forEach(evt => {
-        window.addEventListener(evt, () => {
-            getAudioContext();
-        }, { once: true });
-    });
-
-    // Expose Global API
-    window.audioApp = {
-        init: initAudioManager,
-        startMusic,
-        pauseMusic,
-        toggleMusic,
-        playChimeBurst,
-        playPaperFlipSound,
-        playCameraShutterSound,
-        playTypewriterClickSound,
-        playTone
+    /* ---------- Efek suara ---------- */
+    const sfx = {
+        tap() { tone(660, 0.07, "sine", 0, 0.06); },
+        flip() { tone(440, 0.06, "sine", 0, 0.05); tone(587, 0.08, "triangle", 0.04, 0.05); },
+        open() { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, 0.3, "triangle", i * 0.07, 0.1)); },
+        beep() { tone(720, 0.12, "sine", 0, 0.1); },
+        shutter() { tone(260, 0.05, "square", 0, 0.08); tone(900, 0.09, "sine", 0.04, 0.12); },
+        chime() { [659.25, 880, 1174.66].forEach((f, i) => tone(f, 0.35, "triangle", i * 0.09, 0.09)); }
     };
+
+    /* ---------- Fallback: melodi "Happy Birthday" kotak musik ---------- */
+    const SONG = [
+        [392.0, .3, 0], [392.0, .3, .38], [440.0, .55, .75], [392.0, .55, 1.45], [523.25, .55, 2.15], [493.88, .9, 2.85],
+        [392.0, .3, 4.0], [392.0, .3, 4.38], [440.0, .55, 4.75], [392.0, .55, 5.45], [587.33, .55, 6.15], [523.25, .9, 6.85],
+        [392.0, .3, 8.0], [392.0, .3, 8.38], [783.99, .55, 8.75], [659.25, .55, 9.45], [523.25, .55, 10.15], [493.88, .55, 10.85], [440.0, .85, 11.55],
+        [698.46, .3, 12.8], [698.46, .3, 13.18], [659.25, .55, 13.55], [523.25, .55, 14.25], [587.33, .55, 14.95], [523.25, 1.1, 15.65]
+    ];
+    const SONG_LEN = 17.5;
+
+    function startSynth() {
+        stopSynth();
+        const c = ac();
+        if (!c) return;
+        synthMaster = c.createGain();
+        synthMaster.gain.value = 0.9;
+        synthMaster.connect(c.destination);
+        SONG.forEach(([f, d, t]) => {
+            tone(f, d, "triangle", t + 0.05, 0.09, synthMaster);
+            tone(f * 2, d * 0.7, "sine", t + 0.05, 0.025, synthMaster);
+        });
+        synthTimer = setTimeout(() => { if (playing && useSynth) startSynth(); }, SONG_LEN * 1000);
+    }
+
+    function stopSynth() {
+        clearTimeout(synthTimer);
+        synthTimer = 0;
+        if (synthMaster) {
+            try { synthMaster.gain.setValueAtTime(0, ctx.currentTime); synthMaster.disconnect(); } catch (e) { /* noop */ }
+            synthMaster = null;
+        }
+    }
+
+    /* ---------- Kontrol musik ---------- */
+    function ui() {
+        const b = SC.$("#musicBtn");
+        if (!b) return;
+        b.classList.toggle("is-on", playing);
+        b.setAttribute("aria-pressed", String(playing));
+        b.setAttribute("aria-label", playing ? "Jeda musik" : "Putar musik");
+        const l = SC.$("#musicLabel");
+        if (l) l.textContent = playing ? "Musik" : "Jeda";
+    }
+
+    function fallback() {
+        useSynth = true;
+        if (playing) startSynth();
+    }
+
+    function play() {
+        ac();
+        if (useSynth) { playing = true; startSynth(); ui(); return; }
+        playing = true; ui();
+        const p = bgm.play();
+        if (p && p.catch) {
+            p.catch((err) => {
+                if (err && err.name === "NotAllowedError") { playing = false; ui(); }
+                else fallback();
+            });
+        }
+    }
+
+    function pause() {
+        playing = false;
+        if (bgm) bgm.pause();
+        stopSynth();
+        ui();
+    }
+
+    function toggle() { playing ? pause() : play(); }
+
+    function init() {
+        bgm = new Audio();
+        bgm.loop = true;
+        bgm.preload = "auto";
+        bgm.volume = 0.7;
+        bgm.addEventListener("error", fallback);
+        bgm.src = SRC;
+        const b = SC.$("#musicBtn");
+        if (b) b.addEventListener("click", toggle);
+        ui();
+        // hemat baterai: jeda saat tab disembunyikan, lanjut saat kembali
+        let wasPlaying = false;
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) { wasPlaying = playing; if (playing) pause(); }
+            else if (wasPlaying) { wasPlaying = false; play(); }
+        });
+    }
+
+    SC.audio = Object.assign({ init, play, pause, toggle, isPlaying: () => playing }, sfx);
 })();

@@ -1,0 +1,164 @@
+/* ==========================================================================
+   base.css — design tokens, reset, typography, shared components
+   Tema: "Star Champs Air" (navy + sky blue + kertas bergaris)
+   ========================================================================== */
+
+:root {
+    --navy-950: #001a3d;
+    --navy-900: #00265a;
+    --navy: #013375;
+    --navy-600: #1a4d96;
+    --sky: #b2d4ff;
+    --sky-400: #80b8f3;
+    --sky-200: #d7e8fe;
+    --sky-100: #ecf4ff;
+    --paper: #f4f4f1;
+    --paper-line: #bcd0ea;
+    --ink: #0a1c3c;
+    --ink-soft: #46597a;
+    --gold: #ffc857;
+    --white: #ffffff;
+
+    --font-brand: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
+    --font-serif: "Libre Baskerville", Georgia, serif;
+    --font-type: "Courier Prime", "Courier New", monospace;
+    --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --radius: 14px;
+    --radius-lg: 22px;
+    --shadow-sm: 0 2px 6px rgba(0, 38, 90, .10);
+    --shadow: 0 10px 28px -8px rgba(0, 38, 90, .28);
+    --shadow-lg: 0 24px 60px -16px rgba(0, 26, 61, .45);
+
+    /* Snappy, tidak ada ease-in-out yang lambat */
+    --ease: cubic-bezier(.2, .8, .2, 1);
+    --spring: cubic-bezier(.34, 1.45, .64, 1);
+
+    --nav-h: 56px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink);
+    background: var(--paper);
+    overflow-x: hidden;
+    transition: background-color .3s var(--ease);
+}
+
+body.is-cover { background: var(--navy-950); overflow: hidden; }
+
+img, canvas, video, svg { display: block; max-width: 100%; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+input, textarea { font: inherit; color: inherit; }
+h1, h2, h3, p { margin: 0; }
+[hidden] { display: none !important; }
+
+:focus-visible { outline: 3px solid var(--sky-400); outline-offset: 3px; border-radius: 6px; }
+
+::selection { background: var(--sky); color: var(--navy-950); }
+
+/* ---------- Typography helpers ---------- */
+.brand-font { font-family: var(--font-brand); text-transform: uppercase; letter-spacing: .02em; }
+.mono { font-family: var(--font-mono); font-feature-settings: "zero" 1; }
+.eyebrow {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-family: var(--font-mono); font-size: .75rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--navy-600);
+}
+.eyebrow::before { content: ""; width: 22px; height: 2px; background: currentColor; }
+.section-title {
+    font-family: var(--font-brand); font-weight: 700; text-transform: uppercase;
+    font-size: clamp(2.2rem, 6vw, 3.8rem); line-height: .98; color: var(--navy); letter-spacing: .005em;
+}
+.section-lead { color: var(--ink-soft); max-width: 46ch; margin-top: .75rem; }
+
+/* ---------- Buttons ---------- */
+.btn {
+    --bg: var(--navy); --fg: var(--white); --bd: var(--navy);
+    display: inline-flex; align-items: center; justify-content: center; gap: .55rem;
+    min-height: 46px; padding: .7rem 1.35rem;
+    font-family: var(--font-brand); font-weight: 700; font-size: 1.12rem; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--fg); background: var(--bg); border: 2px solid var(--bd); border-radius: 999px;
+    box-shadow: 0 4px 0 var(--navy-950);
+    transition: transform .16s var(--spring), box-shadow .16s var(--ease), background-color .16s var(--ease);
+    user-select: none; -webkit-user-select: none; touch-action: manipulation;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--navy-950); }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--navy-950); }
+.btn[disabled] { opacity: .45; pointer-events: none; }
+.btn--sky { --bg: var(--sky); --fg: var(--navy-950); --bd: var(--navy); }
+.btn--ghost { --bg: transparent; --fg: var(--navy); --bd: var(--navy); box-shadow: none; }
+.btn--ghost:hover { background: var(--sky-100); box-shadow: none; }
+.btn--sm { min-height: 38px; padding: .4rem 1rem; font-size: 1rem; }
+.btn svg { width: 1.1em; height: 1.1em; flex: none; }
+
+/* ---------- Chips ---------- */
+.chip {
+    padding: .35rem .9rem; border-radius: 999px; border: 2px solid var(--sky);
+    font-family: var(--font-mono); font-size: .78rem; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--navy); background: var(--white);
+    transition: background-color .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease), transform .15s var(--spring);
+}
+.chip:hover { border-color: var(--navy-600); transform: translateY(-1px); }
+.chip[aria-pressed="true"], .chip.is-active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+/* ---------- Ruled paper ---------- */
+.ruled {
+    position: relative;
+    background-color: #fffffd;
+    background-image:
+        linear-gradient(90deg, transparent 46px, rgba(1, 51, 117, .28) 46px, rgba(1, 51, 117, .28) 48px, transparent 48px),
+        linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 32px;
+    background-position: 0 0, 0 6px;
+    box-shadow: var(--shadow);
+}
+
+/* ---------- Tape ---------- */
+.tape {
+    position: absolute; width: 96px; height: 26px; z-index: 3; pointer-events: none;
+    background: rgba(178, 212, 255, .85);
+    border-left: 2px dashed rgba(255, 255, 255, .7); border-right: 2px dashed rgba(255, 255, 255, .7);
+    box-shadow: 0 2px 6px rgba(0, 38, 90, .15);
+}
+
+/* ---------- Stickers (aset dari frame Star Champs Air) ---------- */
+.sticker { position: absolute; pointer-events: none; user-select: none; filter: drop-shadow(0 3px 4px rgba(0, 26, 61, .25)); z-index: 4; }
+
+/* ---------- Toast ---------- */
+.toast {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); z-index: 120;
+    transform: translate(-50%, 14px); opacity: 0; pointer-events: none;
+    max-width: min(92vw, 420px); padding: .65rem 1.1rem;
+    background: var(--navy-950); color: var(--white); border-radius: 12px; border: 2px solid var(--sky);
+    font-size: .9rem; box-shadow: var(--shadow-lg); text-align: center;
+    transition: opacity .2s var(--ease), transform .2s var(--ease);
+}
+.toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Visually hidden ---------- */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--sky-100); }
+::-webkit-scrollbar-thumb { background: var(--sky-400); border-radius: 999px; border: 2px solid var(--sky-100); }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}

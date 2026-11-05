@@ -1,110 +1,76 @@
 /* ==========================================================================
-   TYPEWRITER.JS - Snappy, Interactive Typewriter Effect Engine
+   typewriter.js — efek mengetik. Aman untuk emoji (iterasi per code point).
    ========================================================================== */
-
 (function () {
-    let currentTypingTimer = null;
-    let isCurrentlyTyping = false;
-    let currentFullText = "";
-    let currentTargetElement = null;
-    let onCompleteCallback = null;
+    const SC = (window.SC = window.SC || {});
 
-    /**
-     * Start typing effect on an element
-     * @param {HTMLElement|string} target - DOM Element or ID
-     * @param {string} text - Text to type out
-     * @param {Object} options - { speed: 20, enableSound: true, onComplete: fn }
-     */
-    function typeText(target, text, options = {}) {
-        const el = typeof target === 'string' ? document.getElementById(target) : target;
-        if (!el) return;
+    let timer = 0, active = null; // { el, chars, node, caret, i, speed, done }
 
-        // Stop any active typing
-        stopTyping();
+    function pause(ch) {
+        if (ch === "\n") return 220;
+        if (ch === "." || ch === "!" || ch === "?") return 170;
+        if (ch === ",") return 80;
+        return 0;
+    }
 
-        currentTargetElement = el;
-        currentFullText = text;
-        onCompleteCallback = options.onComplete || null;
-        isCurrentlyTyping = true;
+    function stop() {
+        clearTimeout(timer);
+        timer = 0;
+    }
 
-        const speed = options.speed || 18; // snappy ms per character
-        const enableSound = options.enableSound !== false;
-
-        el.innerHTML = '<span class="typewriter-content"></span><span class="typewriter-cursor"></span>';
-        const contentSpan = el.querySelector('.typewriter-content');
-
-        let charIndex = 0;
-
-        function step() {
-            if (!isCurrentlyTyping) return;
-
-            if (charIndex < currentFullText.length) {
-                const char = currentFullText.charAt(charIndex);
-                if (char === '\n') {
-                    contentSpan.appendChild(document.createElement('br'));
-                } else {
-                    contentSpan.appendChild(document.createTextNode(char));
-                }
-                charIndex++;
-
-                // Optional subtle typewriter audio (every 3 characters to be pleasant)
-                if (enableSound && charIndex % 3 === 0 && window.audioApp) {
-                    window.audioApp.playTypewriterClickSound();
-                }
-
-                currentTypingTimer = setTimeout(step, speed);
-            } else {
-                finishTyping();
-            }
-        }
-
-        step();
+    function finish() {
+        if (!active) return;
+        stop();
+        const a = active;
+        a.node.data = a.chars.join("");
+        if (a.caret.parentNode) a.caret.remove();
+        active = null;
+        if (a.done) a.done();
     }
 
     /**
-     * Immediately finish typing and display full text
+     * @param {HTMLElement} el
+     * @param {string} text
+     * @param {{speed?:number, done?:Function}} [opts]
      */
-    function skipTyping() {
-        if (!isCurrentlyTyping || !currentTargetElement) return;
-        stopTyping();
-        const formatted = currentFullText.replace(/\n/g, '<br>');
-        currentTargetElement.innerHTML = `<span class="typewriter-content">${formatted}</span>`;
-        if (typeof onCompleteCallback === 'function') {
-            onCompleteCallback();
-        }
-    }
+    function type(el, text, opts) {
+        stop();
+        if (active && active.caret.parentNode) active.caret.remove();
+        opts = opts || {};
+        const chars = Array.from(text);
+        el.textContent = "";
+        el.setAttribute("aria-label", text);
 
-    function stopTyping() {
-        if (currentTypingTimer) {
-            clearTimeout(currentTypingTimer);
-            currentTypingTimer = null;
+        if (SC.reducedMotion) {
+            el.textContent = text;
+            if (opts.done) opts.done();
+            return;
         }
-        isCurrentlyTyping = false;
-    }
 
-    function finishTyping() {
-        stopTyping();
-        // Remove blinking cursor after 1.5s
-        if (currentTargetElement) {
-            const cursor = currentTargetElement.querySelector('.typewriter-cursor');
-            if (cursor) {
-                setTimeout(() => {
-                    if (cursor && cursor.parentNode) {
-                        cursor.remove();
-                    }
-                }, 1500);
+        const node = document.createTextNode("");
+        const caret = document.createElement("span");
+        caret.className = "type-caret";
+        caret.setAttribute("aria-hidden", "true");
+        el.append(node, caret);
+
+        const speed = opts.speed || (chars.length > 400 ? 14 : 20);
+        active = { el, chars, node, caret, i: 0, speed, done: opts.done };
+
+        (function step() {
+            const a = active;
+            if (!a || a.node !== node) return;
+            // ketik 1–2 karakter per tick agar tetap halus di teks panjang
+            const n = a.chars.length > 500 ? 2 : 1;
+            let extra = 0;
+            for (let k = 0; k < n && a.i < a.chars.length; k++) {
+                const ch = a.chars[a.i++];
+                a.node.data += ch;
+                extra += pause(ch);
             }
-        }
-        if (typeof onCompleteCallback === 'function') {
-            onCompleteCallback();
-        }
+            if (a.i >= a.chars.length) return finish();
+            timer = setTimeout(step, a.speed + extra);
+        })();
     }
 
-    // Expose Global API
-    window.typewriter = {
-        type: typeText,
-        skip: skipTyping,
-        stop: stopTyping,
-        isTyping: () => isCurrentlyTyping
-    };
+    SC.typewriter = { type, skip: finish, stop: () => { stop(); if (active && active.caret.parentNode) active.caret.remove(); active = null; }, isTyping: () => !!active };
 })();

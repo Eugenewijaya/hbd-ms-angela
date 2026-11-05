@@ -1,0 +1,220 @@
+/* ==========================================================================
+   pages.css — navigasi, halaman Ucapan, Doa Staf (kolase), Harapan
+   ========================================================================== */
+
+/* ---------- Layer 3D ---------- */
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+#confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 110; pointer-events: none; }
+
+/* ---------- App shell ---------- */
+.app { position: relative; z-index: 5; min-height: 100vh; min-height: 100dvh; padding-top: var(--nav-h); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); }
+body.is-cover .app, body.is-cover .nav { visibility: hidden; }
+
+/* ---------- Navigasi ---------- */
+.nav {
+    position: fixed; inset: 0 0 auto 0; z-index: 70; height: var(--nav-h);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 clamp(14px, 3vw, 28px);
+    background: rgba(244, 244, 241, .92); border-bottom: 2px solid var(--navy);
+}
+.nav__brand { font-family: var(--font-brand); font-weight: 700; font-size: 1.35rem; letter-spacing: .02em; text-transform: uppercase; color: var(--navy); display: inline-flex; align-items: center; gap: .4rem; line-height: 1; }
+.nav__brand svg { width: .75em; height: .75em; }
+.nav__steps { display: flex; gap: 4px; }
+.nav__steps button {
+    display: inline-flex; align-items: baseline; gap: .45rem; padding: .45rem .95rem; border-radius: 999px;
+    font-family: var(--font-brand); font-weight: 600; font-size: 1.05rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft);
+    transition: background-color .15s var(--ease), color .15s var(--ease);
+}
+.nav__steps button span { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .08em; opacity: .75; }
+.nav__steps button:hover { background: var(--sky-100); color: var(--navy); }
+.nav__steps button[aria-current="page"] { background: var(--navy); color: var(--white); }
+
+/* tombol musik */
+.music {
+    display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px 0 5px; border-radius: 999px;
+    background: var(--white); border: 2px solid var(--navy); color: var(--navy);
+    transition: transform .16s var(--spring), background-color .16s var(--ease);
+}
+.music:hover { transform: scale(1.05); }
+.music__disc {
+    width: 28px; height: 28px; border-radius: 50%; position: relative; flex: none;
+    background: radial-gradient(circle, var(--sky) 0 18%, var(--navy) 19% 100%);
+    box-shadow: inset 0 0 0 3px var(--navy-950);
+}
+.music.is-on .music__disc { animation: disc 3s linear infinite; }
+.music__bars { display: flex; align-items: flex-end; gap: 2px; height: 16px; }
+.music__bars i { width: 3px; height: 100%; background: var(--navy); border-radius: 2px; transform: scaleY(.25); transform-origin: bottom; }
+.music.is-on .music__bars i { animation: eq .8s ease-in-out infinite; }
+.music.is-on .music__bars i:nth-child(2) { animation-delay: .15s; }
+.music.is-on .music__bars i:nth-child(3) { animation-delay: .3s; }
+.music.is-on .music__bars i:nth-child(4) { animation-delay: .1s; }
+.music__label { font-family: var(--font-mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; }
+
+/* ---------- Halaman ---------- */
+.page { display: none; width: min(100%, 1080px); margin: 0 auto; padding: clamp(28px, 5vw, 56px) clamp(16px, 4vw, 32px) 0; }
+.page.is-active { display: block; animation: pageIn .3s var(--ease) both; }
+.page__head { margin-bottom: clamp(24px, 4vw, 40px); }
+
+.pager { margin-top: clamp(36px, 6vw, 64px); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+/* ==========================================================================
+   Halaman 1 — Ucapan
+   ========================================================================== */
+.hero { display: grid; gap: clamp(28px, 5vw, 60px); align-items: center; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .hero { grid-template-columns: 1.1fr .9fr; } }
+.hero__title {
+    margin-top: .9rem; font-family: var(--font-brand); font-weight: 700; text-transform: uppercase; color: var(--navy);
+    font-size: clamp(2.8rem, 9vw, 6.2rem); line-height: .92; letter-spacing: .005em;
+}
+.hero__title em {
+    display: block; font-style: normal; color: var(--navy);
+    background: linear-gradient(transparent 62%, var(--sky) 62% 92%, transparent 92%); width: fit-content; padding-right: .15em;
+}
+.hero__lead { margin-top: 1.1rem; max-width: 36ch; color: var(--ink-soft); font-size: 1.05rem; }
+.hero__meta { margin-top: 1.4rem; display: flex; gap: 10px; flex-wrap: wrap; }
+.stamp {
+    display: inline-flex; align-items: center; gap: .5rem; padding: .4rem .85rem; border: 2px dashed var(--navy-600); border-radius: 8px;
+    font-family: var(--font-mono); font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--navy);
+    transform: rotate(-1.5deg); background: rgba(255, 255, 255, .6);
+}
+.stamp:nth-child(2) { transform: rotate(1.2deg); }
+
+/* kartu foto */
+.photo { position: relative; justify-self: center; width: min(100%, 380px); --r: 2.2deg; transform: rotate(var(--r)); animation: floatY 6s ease-in-out infinite; }
+.photo__card { background: var(--white); padding: 14px 14px 18px; box-shadow: var(--shadow-lg); border: 1px solid rgba(1, 51, 117, .12); }
+.photo__frame { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--sky-100); }
+.photo__img { width: 100%; height: 100%; object-fit: cover; }
+.photo__empty {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; text-align: center;
+    background: linear-gradient(180deg, var(--sky-200), var(--sky-100)); color: var(--navy);
+}
+.photo__empty img { width: 92px; }
+.photo__empty p { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+.photo__upload { position: absolute; right: 10px; bottom: 10px; }
+.photo__cap { margin-top: 14px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.photo__cap strong { font-family: var(--font-brand); font-size: 1.7rem; text-transform: uppercase; color: var(--navy); line-height: 1; }
+.photo__cap span { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .1em; color: var(--ink-soft); }
+.photo .tape { top: -13px; left: 50%; margin-left: -48px; transform: rotate(-3deg); }
+.photo .sticker--a { width: 74px; right: -26px; top: -30px; z-index: 5; }
+.photo .sticker--b { width: 64px; left: -24px; bottom: 56px; --r: -12deg; z-index: 5; }
+.photo .sticker--c { width: 92px; right: -18px; bottom: -18px; z-index: 5; transform: rotate(8deg); }
+
+/* catatan typewriter */
+.note { margin: clamp(36px, 6vw, 64px) auto 0; width: min(100%, 760px); padding: 26px 24px 24px 66px; transform: rotate(-.35deg); }
+.note .tape { top: -12px; left: 40px; transform: rotate(-5deg); }
+.note .tape + .tape { left: auto; right: 40px; transform: rotate(4deg); background: rgba(255, 255, 255, .8); }
+.note__head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-family: var(--font-mono); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--navy-600); margin-bottom: 6px; line-height: 32px; }
+.type-text { font-family: var(--font-type); font-size: 1.08rem; line-height: 32px; color: var(--ink); min-height: 192px; white-space: pre-wrap; }
+.type-caret { display: inline-block; width: 2px; height: 1.15em; margin-left: 2px; background: var(--navy); vertical-align: text-bottom; animation: caret .8s steps(1) infinite; }
+
+/* ==========================================================================
+   Halaman 2 — Doa Staf (kolase 2 kolom)
+   ========================================================================== */
+.collage { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(12px, 3vw, 28px); align-items: start; }
+.collage__col { display: flex; flex-direction: column; gap: clamp(14px, 3vw, 26px); }
+.collage__col:nth-child(2) { padding-top: clamp(24px, 6vw, 64px); }
+
+.letter {
+    --rot: 0deg; --tint: var(--white);
+    position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; width: 100%; text-align: left;
+    padding: clamp(46px, 8vw, 60px) clamp(12px, 2.6vw, 20px) clamp(12px, 2.6vw, 18px);
+    background: var(--tint); border: 2px solid var(--navy); border-radius: 6px 6px 14px 14px;
+    box-shadow: 4px 5px 0 var(--navy-900);
+    transform: rotate(var(--rot)); animation: cardIn .45s var(--spring) both; animation-delay: calc(var(--i, 0) * 45ms);
+    transition: transform .2s var(--spring), box-shadow .2s var(--ease);
+    touch-action: manipulation; -webkit-user-select: none; user-select: none;
+}
+.letter:hover { transform: rotate(0deg) translateY(-6px); box-shadow: 7px 10px 0 var(--navy-900); }
+.letter:active { transform: rotate(0deg) translateY(0); box-shadow: 2px 3px 0 var(--navy-900); }
+.letter--sky { --tint: var(--sky-200); }
+.letter--paper { --tint: #fbfaf4; }
+
+/* tutup amplop (segitiga) + segel bintang */
+.letter__flap { position: absolute; inset: 0 0 auto 0; height: 50px; background: linear-gradient(180deg, rgba(1, 51, 117, .16), rgba(1, 51, 117, .04)); clip-path: polygon(0 0, 100% 0, 50% 100%); transform-origin: top; transition: transform .2s var(--ease); pointer-events: none; }
+.letter:hover .letter__flap { transform: scaleY(.6); }
+.letter__seal { position: absolute; left: 50%; top: 30px; width: 34px; height: 34px; margin: 0 0 0 -17px; display: grid; place-items: center; border-radius: 50%; background: var(--navy); border: 2px solid var(--white); box-shadow: var(--shadow-sm); color: var(--sky); transition: transform .2s var(--spring); pointer-events: none; }
+.letter__seal svg { width: 15px; height: 15px; }
+.letter:hover .letter__seal { transform: scale(1.14) rotate(14deg); }
+
+.letter__no { font-family: var(--font-mono); font-size: .66rem; letter-spacing: .14em; color: var(--navy-600); text-transform: uppercase; }
+.letter__name { font-family: var(--font-brand); font-weight: 700; font-size: clamp(1.35rem, 4.6vw, 1.9rem); line-height: 1; text-transform: uppercase; color: var(--navy); }
+.letter__peek {
+    font-family: var(--font-type); font-size: clamp(.74rem, 2.5vw, .9rem); line-height: 1.5; color: var(--ink-soft);
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--lines, 3); overflow: hidden;
+}
+.letter__cta { margin-top: 6px; display: inline-flex; align-items: center; gap: .4rem; font-family: var(--font-mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--navy); border-bottom: 2px solid var(--sky-400); padding-bottom: 1px; }
+.letter .sticker { width: clamp(34px, 8vw, 52px); }
+.letter .sticker.tl { left: -14px; top: -14px; } .letter .sticker.tr { right: -12px; top: -16px; }
+.letter .sticker.br { right: -12px; bottom: -14px; } .letter .sticker.bl { left: -12px; bottom: -14px; }
+
+.letter--add { --tint: transparent; align-items: center; justify-content: center; text-align: center; min-height: 150px; padding: 20px 14px; border-style: dashed; box-shadow: none; background: rgba(255, 255, 255, .45); }
+.letter--add:hover { background: var(--white); box-shadow: 4px 5px 0 var(--navy-900); }
+.letter--add .plus { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--navy); display: grid; place-items: center; color: var(--navy); }
+.letter--add .plus svg { width: 18px; height: 18px; }
+
+/* ---------- Modal ---------- */
+.modal { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 20, 48, .72); }
+.modal.is-open { display: flex; animation: fadeIn .18s linear both; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal__card { position: relative; width: min(100%, 560px); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; background: #fffffd; border: 2px solid var(--navy); border-radius: 18px; box-shadow: 8px 10px 0 var(--navy-900); animation: popIn .3s var(--spring) both; overflow: hidden; }
+.modal__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px 10px 18px; background: var(--sky); color: var(--navy); border-bottom: 2px solid var(--navy); }
+.modal__bar .mono { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; }
+.modal__close { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--navy); background: var(--white); transition: transform .15s var(--spring), background-color .15s; }
+.modal__close:hover { background: var(--navy); color: var(--white); transform: rotate(90deg); }
+.modal__close svg { width: 14px; height: 14px; }
+.modal__who { display: flex; align-items: center; gap: 14px; padding: 18px 20px 6px; }
+.avatar { width: 54px; height: 54px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--navy); color: var(--sky); font-family: var(--font-brand); font-weight: 700; font-size: 1.7rem; border: 3px solid var(--sky); box-shadow: 0 0 0 2px var(--navy); }
+.modal__name { font-family: var(--font-brand); font-weight: 700; font-size: 2rem; line-height: 1; text-transform: uppercase; color: var(--navy); }
+.modal__role { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); margin-top: 4px; }
+.modal__body { overflow-y: auto; overscroll-behavior: contain; padding: 8px 20px 18px 56px; margin: 6px 0 0; background-image: linear-gradient(90deg, transparent 34px, rgba(1, 51, 117, .28) 34px, rgba(1, 51, 117, .28) 36px, transparent 36px), linear-gradient(var(--paper-line) 1px, transparent 1px); background-size: 100% 100%, 100% 32px; background-position: 0 0, 0 -1px; background-attachment: local; min-height: 160px; }
+.modal__body .type-text { min-height: 0; padding-top: 0; }
+.modal__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-top: 2px solid var(--navy); background: var(--sky-100); }
+.modal__foot .btn { flex: 0 0 auto; }
+.modal__foot .btn--skip { margin: 0 auto; }
+@media (max-width: 420px) { .modal__foot .btn { padding-inline: .8rem; font-size: .95rem; } .modal__body { padding-left: 50px; } }
+
+/* form tambah surat */
+.form { display: grid; gap: 14px; padding: 18px 20px 20px; }
+.field label { display: block; font-family: var(--font-mono); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--navy-600); margin-bottom: 4px; }
+.field input, .field textarea { width: 100%; padding: .7rem .85rem; background: var(--white); border: 2px solid var(--navy); border-radius: 10px; outline: none; }
+.field input:focus, .field textarea:focus { border-color: var(--sky-400); box-shadow: 0 0 0 4px var(--sky-200); }
+.field textarea { resize: vertical; min-height: 120px; font-family: var(--font-type); }
+
+/* ==========================================================================
+   Halaman 3 — Harapan
+   ========================================================================== */
+.wishes { display: grid; gap: clamp(24px, 4vw, 48px); align-items: start; }
+@media (min-width: 880px) { .wishes { grid-template-columns: 1.25fr .75fr; } }
+.wishes__letter { padding: 24px 22px 26px 66px; transform: rotate(-.3deg); }
+.wishes__letter p { font-family: var(--font-type); font-size: 1.05rem; line-height: 32px; margin-bottom: 32px; }
+.wishes__letter p:last-child { margin-bottom: 0; }
+.wishes__letter .sign { font-family: var(--font-brand); text-transform: uppercase; font-weight: 700; font-size: 1.3rem; color: var(--navy); letter-spacing: .03em; }
+.wishes__letter .tape { top: -12px; left: 50%; margin-left: -48px; transform: rotate(2deg); }
+
+.cake { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 26px 18px 22px; background: var(--navy); color: var(--white); border-radius: var(--radius-lg); border: 2px solid var(--navy-950); box-shadow: 6px 8px 0 var(--navy-950); overflow: hidden; }
+.cake::before { content: ""; position: absolute; left: 50%; top: 34%; width: 340px; aspect-ratio: 1; margin: -170px 0 0 -170px; background: radial-gradient(circle, rgba(178, 212, 255, .38), transparent 66%); pointer-events: none; }
+.cake__svg { position: relative; width: min(100%, 230px); overflow: visible; }
+.cake__flame { transform-origin: 100px 46px; animation: flame .45s ease-in-out infinite; }
+.cake.is-out .cake__flame { display: none; }
+.cake__smoke { opacity: 0; }
+.cake.is-out .cake__smoke { animation: smoke 1.2s var(--ease) both; transform-origin: 100px 46px; }
+.cake__title { font-family: var(--font-brand); font-weight: 700; text-transform: uppercase; font-size: 1.5rem; text-align: center; line-height: 1.1; position: relative; }
+.cake__hint { font-family: var(--font-mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--sky); text-align: center; position: relative; }
+.cake .btn { position: relative; }
+
+.unlock { margin-top: clamp(24px, 4vw, 40px); display: none; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 18px 22px; background: var(--sky-200); border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: 4px 5px 0 var(--navy-900); }
+.unlock.is-on { display: flex; animation: popIn .35s var(--spring) both; }
+.unlock strong { font-family: var(--font-brand); font-size: 1.5rem; text-transform: uppercase; color: var(--navy); display: block; line-height: 1.05; }
+.unlock span { font-size: .92rem; color: var(--ink-soft); }
+
+/* ---------- Mobile: tab bar di bawah ---------- */
+@media (max-width: 760px) {
+    .nav__steps {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 70; justify-content: space-around; gap: 0;
+        padding: 6px 6px calc(env(safe-area-inset-bottom, 0px) + 6px); background: rgba(244, 244, 241, .96); border-top: 2px solid var(--navy);
+    }
+    .nav__steps button { flex: 1; flex-direction: column; align-items: center; gap: 0; border-radius: 12px; padding: .35rem .2rem; font-size: .95rem; }
+    .nav__steps button span { font-size: .6rem; }
+    .music__label { display: none; }
+    .music { padding-right: 10px; }
+    .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); }
+}
