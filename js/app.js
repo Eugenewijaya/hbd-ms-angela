@@ -96,48 +96,10 @@
         }
     }
 
-    /* ---------- 3. Foto Ms. Angela (Tanpa SVG) ---------- */
+    /* ---------- 3. Foto Profil Ms. Angela (Tampil Penuh dari Aset) ---------- */
     function initPhotoCard() {
-        const input = SC.$("#photoInput");
-        const img = SC.$("#photoImg");
-        const empty = SC.$("#photoEmpty");
         const card = SC.$("#photoCard");
-
-        function showPhoto(src) {
-            if (!img) return;
-            img.onload = () => {
-                img.hidden = false;
-                if (empty) empty.hidden = true;
-            };
-            img.onerror = () => {
-                img.hidden = true;
-                if (empty) empty.hidden = false;
-            };
-            img.src = src;
-        }
-
-        try {
-            const saved = localStorage.getItem("sc_angela_photo");
-            if (saved) showPhoto(saved);
-        } catch (e) { /* storage dibatasi */ }
-
-        if (input) {
-            input.addEventListener("change", (e) => {
-                const file = e.target.files && e.target.files[0];
-                e.target.value = "";
-                if (!file || !file.type.startsWith("image/")) return;
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    const dataUrl = ev.target.result;
-                    showPhoto(dataUrl);
-                    try { localStorage.setItem("sc_angela_photo", dataUrl); } catch (err) { /* kuota penuh */ }
-                    SC.audio.chime();
-                    SC.fx.burst(40);
-                    SC.toast("Foto Ms. Angela berhasil dipasang.");
-                };
-                reader.readAsDataURL(file);
-            });
-        }
+        try { localStorage.removeItem("sc_angela_photo"); } catch (e) { /* storage dibatasi */ }
 
         if (card && window.matchMedia("(pointer: fine)").matches && !SC.reducedMotion) {
             card.addEventListener("pointermove", (e) => {

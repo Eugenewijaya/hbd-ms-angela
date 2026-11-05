@@ -45,9 +45,9 @@ Dirancang dengan identitas visual **Star Champs ★ Air** (*boarding pass*, biru
    - Animasi sinar memancar berlapis (`conic-gradient` berputar lembut), cahaya *breathing glow*, gelombang cincin (*expanding rings*), bintang berkelip, dan elemen 3D ringan.
    - Seluruh animasi menggunakan properti ramah GPU (`transform` & `opacity`) dan otomatis menyesuaikan performa perangkat agar berjalan mulus di berbagai HP maupun laptop.
 
-2. **Halaman 1 — Ucapan & Catatan Doa (Mobile-Friendly & Tanpa SVG untuk Foto)**
+2. **Halaman 1 — Ucapan & Catatan Doa (Mobile-Friendly & Foto Profil Tampil Penuh)**
    - Header bergaya tiket *boarding pass* **Star Champs ★ Air** (`ALSUT ✈ KARAWACI` / `ALST ✈ KRWC`).
-   - Bingkai foto Ms. Angela menggunakan aset raster dan tombol **Pasang Foto** yang langsung menyimpan foto di browser.
+   - Bingkai foto Ms. Angela langsung menampilkan `assets/foto ms angela/angela.jpg` secara utuh (*full-body* dari ujung rambut hingga sepatu tanpa terpotong).
    - Catatan doa di atas kertas bergaris dengan efek **Typewriter** dan tombol *Lewati Ketik*.
    - Navigasi langkah di bagian bawah disembunyikan di awal agar alur cerita berurutan, dan otomatis terbuka setelah pengguna mencapai bagian akhir (*Photobooth*).
 
