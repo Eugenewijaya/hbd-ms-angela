@@ -1,5 +1,5 @@
 /* ==========================================================================
-   data.js — konten: catatan pembuka, 11 surat staf, dan harapan bersama
+   data.js — konten: catatan pembuka, 13 surat staf, dan harapan bersama
    ========================================================================== */
 (function () {
     const SC = (window.SC = window.SC || {});
@@ -21,48 +21,56 @@
 
     SC.staff = [
         {
-            author: "Miss Riska",
-            message: "Happy birthday ya Ms. Angela! 🎂 Jujur aku selalu kagum sama gimana sabarnya Ms. Angela kalau lagi hadapin anak-anak di sesi terapi, auranya tuh tenang banget sampai anak yang tadinya rewel bisa langsung nyaman. Makasih banyak ya Ms udah selalu sabar bimbing aku juga, nggak pernah pelit bagi ilmu, dan selalu pengertian sama tim. Semoga Ms. Angela sehat terus, panjang umur, dan bahagia selalu bareng keluarga maupun bareng kita di Star Champs!"
+            author: "Miss Rizka",
+            message: "Happy Birthday, Miss Angela! 🥳🤩 Wishing you a truly fulfilling year ahead, filled with continued success, health, and moments that bring you genuine joy."
+        },
+        {
+            author: "Miss Illon",
+            message: "Happy Birthday, Miss Angela! 🥳🎉 Semoga di usia yang baru ini selalu diberikan kesehatan, kebahagiaan, dan kelancaran dalam setiap hal. May your days be filled with more blessings, happiness, and beautiful moments. Wishing you all the best, today and always! God bless you ❤️"
+        },
+        {
+            author: "Miss Gaby",
+            message: "Happy birthday, Miss Angela! 🥳🎉 Panjang umur, sehat selalu, lancar semua pekerjaannya, semakin berlimpah berkat dan sukacita. God bless you! 🩷"
+        },
+        {
+            author: "Mr. Evid",
+            message: "Happy birthday, Miss Angela! 🥳 Semoga di usia yang baru ini makin sehat, makin happy, dan selalu dimudahkan dalam segala urusan, baik pekerjaan maupun pribadi. Have a great one today! GBU"
         },
         {
             author: "Mr. Nathan",
-            message: "Selamat ulang tahun, Ms. Angela! 🎉 Kalau ngomongin soal cara memimpin di Star Champs, Ms. Angela tuh beneran contoh leader yang asik dan mengayomi. Kalau ada kendala di lapangan atau kasus anak yang butuh diskusi ekstra, Ms. selalu buka pintu buat ngobrol santai tanpa bikin kita merasa tertekan. Doa terbaik dari saya, semoga Ms. Angela selalu diberkati kesehatan, kelancaran rezeki, dan makin sukses memimpin Star Champs ke depannya!"
+            message: "Happy Birthday, Miss Angela! 🥳 Sehat & sukses dan bahagia selalu. Dimudahkan dalam segala urusan, WUATB & GBU"
         },
         {
-            author: "Miss Nabila",
-            message: "Barakallah fii umrik / Happy birthday Ms. Angela! 🥳 Makasih banyak ya Ms udah jadi sosok yang super hangat buat aku di Star Champs. Tiap kali jadwal lagi padat atau kita lagi capek abis pegang anak beruntun, sapaan dan senyum Ms. Angela tuh selalu berhasil bikin suasana adem lagi. Semoga di usia yang baru ini semua doa dan harapan baik Ms. Angela satu per satu dikabulkan Tuhan. Tetap jadi panutan kami ya Ms!"
+            author: "Miss Regina",
+            message: "Selamat bertambah usia, Miss Angela! 🥳 Sehat selalu, banyak berkat, tercapai segala cita dan harapannya serta banyak kebahagiaan yang menghampiri. Tuhan berkati selalu 💖"
         },
         {
-            author: "Mr. Regina",
-            message: "Happy Birthday Ms. Angela! 🎈 Terima kasih banyak atas semua arahan, masukan yang bijak, dan kepercayaannya selama kita jalan bareng di Star Champs. Senang rasanya bisa kerja di lingkungan yang dipimpin sama orang yang bener-bener peduli sama perkembangan tiap anak sekaligus peduli sama kesejahteraan timnya. Semoga Ms. Angela selalu diberi kekuatan, kesehatan prima, dan kebahagiaan yang melimpah tahun ini!"
+            author: "Teh Bila",
+            message: "Selamat ulang tahun, Miss Angela! 🥳🥳 Semoga panjang umur, sehat & bahagia selalu, dipermudah segala urusannya, dan Allah lindungi dimanapun berada 🫶🏻🫶🏻"
+        },
+        {
+            author: "Aa Firrdaus",
+            message: "Selamat ulang tahun, Miss Angela! 🥳 Semoga panjang umur dan sehat selalu ya dan semoga dimudahkan urusannya. Aminn 🤲🤲"
+        },
+        {
+            author: "Teh Muhayanah",
+            message: "Selamat ulang tahun, Miss Angela! 🥳🥳 Panjang umur, sehat dan bahagia selalu. Semoga apa yang diinginkan tahun ini tercapai. Amin 🤲🫶"
         },
         {
             author: "Miss Stella",
-            message: "Selamat ulang tahun Ms. Angelaaa! 💖 Aku belajar banyak banget dari Ms. Angela, bukan cuma soal teknis terapi dan cara komunikasi sama anak-anak, tapi juga soal gimana caranya punya hati yang sabar dan tulus pas ngadepin orang tua murid. Makasih udah selalu jadi tempat bertanya yang nyaman buat aku ya Ms. Semoga Tuhan selalu melimpahkan berkat, sukacita, dan kesehatan buat Ms. Angela setiap hari!"
+            message: "Happy Birthday, Miss Angela! 🥳 Wishing you good health, happiness, and endless blessings. Semoga selalu diberikan kekuatan, sukacita, dan kesuksesan dalam setiap langkah. Have a wonderful birthday! ❤️"
         },
         {
-            author: "Miss Tata",
-            message: "Met ultah ya Ms. Angela! 🎂🥳 Semoga di umur yang baru ini Ms. Angela makin bahagia, makin awet muda karena tiap hari ketemu dunia anak-anak terus hahaha, dan dijauhkan dari segala rasa lelah yang berlebihan! Makasih ya Ms udah selalu dengerin cerita-cerita kita dan selalu kasih solusi yang bikin hati tenang. Pokoknya kami semua bersyukur banget punya Ms. Angela, terus pimpin kita di Star Champs ya Ms!"
-        },
-        {
-            author: "Aa Daus",
-            message: "Selamat ulang tahun Ms. Angela! 🎉 Doa dari Aa Daus semoga Ms. Angela selalu diberikan kesehatan lahir batin, dipanjangkan umurnya dalam keberkahan, dan dimudahkan segala urusannya. Terima kasih banyak ya Ms karena selama ini selalu ramah, baik banget, dan menghargai kami semua tanpa pandang bulu di Star Champs. Semoga kebaikan Ms. Angela dibalas berlipat ganda oleh Tuhan Yang Maha Esa. Amin!"
-        },
-        {
-            author: "Teh Yana",
-            message: "Happy level up day Ms. Angela! 🌷✨ Makasih banyak ya Ms karena udah bikin Star Champs terasa kayak rumah kedua buat kita semua. Ms. Angela tuh selalu punya cara lembut buat ngingetin dan nyemangatin kita kalau lagi ada hal yang kurang pas, jadi kita semua semangat buat terus belajar jadi lebih baik. Semoga tahun ini membawa banyak kejutan manis, rezeki yang lancar, dan hati yang selalu gembira buat Ms. Angela!"
-        },
-        {
-            author: "Teh Nabila",
-            message: "Selamat ulang tahun ya Ms. Angela! 🎂 Doa Teh Nabila buat Ms. Angela semoga sehat selalu, makin sukses, dan selalu dalam lindungan-Nya. Senang banget bisa kenal dan kerja bareng sosok sebaik dan sesabar Ms. Angela. Terima kasih sudah selalu perhatian sama hal-hal kecil di sekitar kita. Semoga Star Champs makin maju dan berkah terus di bawah kepemimpinan Ms. Angela!"
-        },
-        {
-            author: "Evit",
-            message: "Happy Birthday, Ms. Angela! 🙌 Respect banget buat dedikasi dan konsistensi Ms. Angela dalam menjaga kualitas pelayanan terapi sekaligus menjaga kekompakan tim di Star Champs. Nggak gampang jadi pemimpin yang bisa tegas sekaligus punya empati tinggi, tapi Ms. Angela berhasil nunjukin itu ke kita semua. Semoga di tahun yang baru ini semua rencana besar Ms. Angela dan Star Champs berjalan mulus!"
+            author: "Miss Nabilla",
+            message: "Happy Birthday, Miss Angela! 🎂✨ Semoga selalu sehat, bahagia, dan dikelilingi orang-orang yang membawa energi positif. Wishing you more beautiful moments and amazing achievements ahead! 🥰"
         },
         {
             author: "Miss Lena",
-            message: "Happy birthday Ms. Angela! 🎂💛 Terima kasih sudah jadi role model dan mentor yang luar biasa buat aku dan teman-teman semua di Star Champs. Setiap kali lihat cara Ms. Angela berinteraksi sama anak-anak dan orang tua, aku selalu terinspirasi buat jadi pribadi yang lebih sabar dan bijak. Semoga Ms. Angela selalu dilimpahi kebahagiaan, kesehatan, dan keberkahan setiap harinya. Bangga banget bisa belajar bareng Ms. Angela!"
+            message: "Selamat ulang tahun, Miss Angela! 🥳 Semoga panjang umur, sehat selalu, semakin sukses, dan segala harapan baiknya bisa tercapai. Semoga setiap hari selalu dipenuhi kebahagiaan dan berkat. Tuhan memberkati! 🙏🏻"
+        },
+        {
+            author: "Miss Tata",
+            message: "Happy Birthday, Miss Angela! 🥳🎂 Wishing you a wonderful year ahead filled with good health, happiness, and endless blessings. Semoga selalu diberikan kekuatan, kesuksesan, dan sukacita dalam setiap perjalanan. God bless you always! ❤️"
         }
     ];
 })();

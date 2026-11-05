@@ -51,8 +51,8 @@ Dirancang dengan identitas visual **Star Champs ★ Air** (*boarding pass*, biru
    - Catatan doa di atas kertas bergaris dengan efek **Typewriter** dan tombol *Lewati Ketik*.
    - Navigasi langkah di bagian bawah disembunyikan di awal agar alur cerita berurutan, dan otomatis terbuka setelah pengguna mencapai bagian akhir (*Photobooth*).
 
-3. **Halaman 2 — Kolase 2 Kolom Menurun Amplop Doa 11 Staf**
-   - 11 surat staf (*Miss Riska, Mr. Nathan, Miss Nabila, Mr. Regina, Miss Stella, Miss Tata, Aa Daus, Teh Yana, Teh Nabila, Evit, Miss Lena*) disusun dalam **kolase 2 baris kolom menurun ke bawah**.
+3. **Halaman 2 — Kolase 2 Kolom Menurun Amplop Doa 13 Staf**
+   - 13 surat staf (*Miss Rizka, Miss Illon, Miss Gaby, Mr. Evid, Mr. Nathan, Miss Regina, Teh Bila, Aa Firrdaus, Teh Muhayanah, Miss Stella, Miss Nabilla, Miss Lena, Miss Tata*) disusun dalam **kolase 2 baris kolom menurun ke bawah**.
    - Setiap surat dibungkus rapat dalam bentuk amplop bersegel bintang tanpa menampilkan bocoran isi pesan di luar.
    - Saat amplop diklik, muncul pop-up modal surat dengan efek **Typewriter** dan navigasi *Sebelumnya / Berikutnya*.
 
