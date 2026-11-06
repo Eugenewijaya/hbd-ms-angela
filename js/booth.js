@@ -1,6 +1,10 @@
 /* ==========================================================================
    booth.js — photobooth: 3 pose -> frame "Star Champs Air" (FLIGHT KRWC001)
-   Live kamera & foto langsung tampil di dalam jendela frame Star Champs Air.
+   Mendukung:
+   - Live kamera & foto langsung tampil di dalam jendela frame Star Champs Air
+   - Upload pintar (otomatis mengisi slot yang kosong terlebih dahulu)
+   - Fitur Crop (Zoom 100%-280% & Geser/Pan via tombol atau drag langsung di frame)
+   - Fitur Move Frame (Pindah / Tukar hasil foto antar slot Pose 1, 2, dan 3)
    ========================================================================== */
 (function () {
     const SC = (window.SC = window.SC || {});
@@ -17,34 +21,77 @@
     const PER = F.shotsPerStrip || 3;
     const AR = F.slots[0].w / F.slots[0].h;
 
-    let photos = new Array(PER).fill(null); // { raw: canvas, filtered: canvas }
+    // Setiap item: { src: canvas, zoom: number, panX: number, panY: number, cropped: canvas, filtered: canvas }
+    let photos = new Array(PER).fill(null);
     let active = 0, filter = "normal", facing = "user";
     let stream = null, session = false, counting = false;
     let frameImg = null, frameReady = false;
     let camStickerImg = null, camStickerReady = false;
     let renderQueued = false, liveRaf = 0;
+    let dragState = null;
     const el = {};
 
     /* ---------- util canvas ---------- */
     function mkCanvas(w, h) {
         const c = document.createElement("canvas");
-        c.width = Math.round(w);
-        c.height = Math.round(h);
+        c.width = Math.max(1, Math.round(w));
+        c.height = Math.max(1, Math.round(h));
         return c;
     }
 
-    /** potong tengah sumber sesuai rasio slot, hasil <= maxW */
-    function coverCrop(src, sw, sh, mirror) {
-        let cw = sw, ch = sw / AR;
-        if (ch > sh) { ch = sh; cw = sh * AR; }
-        const ow = Math.min(1000, Math.round(cw)), oh = Math.round(ow / AR);
-        const c = mkCanvas(ow, oh), x = c.getContext("2d");
-        if (mirror) { x.translate(ow, 0); x.scale(-1, 1); }
-        x.drawImage(src, (sw - cw) / 2, (sh - ch) / 2, cw, ch, 0, 0, ow, oh);
+    function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+    }
+
+    /** Simpan gambar sumber utuh (maks 1400px) agar bisa di-crop & digeser kapan saja */
+    function captureSource(src, sw, sh, mirror) {
+        const maxDim = 1400;
+        const scale = Math.min(1, maxDim / Math.max(sw, sh));
+        const ow = Math.max(1, Math.round(sw * scale));
+        const oh = Math.max(1, Math.round(sh * scale));
+        const c = mkCanvas(ow, oh);
+        const x = c.getContext("2d");
+        if (mirror) {
+            x.translate(ow, 0);
+            x.scale(-1, 1);
+        }
+        x.drawImage(src, 0, 0, sw, sh, 0, 0, ow, oh);
         return c;
     }
 
-    /** gambar sumber video/gambar langsung ke kotak (dx, dy, dw, dh) secara cover */
+    /** Potong sumber sesuai zoom (1.0..2.8) & panX/panY (-1..1) ke ukuran slot */
+    function cropFromSource(srcCanvas, zoom, panX, panY, outW, outH) {
+        const sw = srcCanvas.width;
+        const sh = srcCanvas.height;
+        const targetAr = outW / outH;
+
+        let baseW = sw;
+        let baseH = sw / targetAr;
+        if (baseH > sh) {
+            baseH = sh;
+            baseW = sh * targetAr;
+        }
+
+        const z = clamp(zoom || 1, 1, 3);
+        const cw = baseW / z;
+        const ch = baseH / z;
+
+        const maxDx = Math.max(0, (sw - cw) / 2);
+        const maxDy = Math.max(0, (sh - ch) / 2);
+
+        // panX > 0 menggeser gambar ke kanan di dalam frame (sx bergerak ke kiri)
+        const sx = clamp((sw - cw) / 2 - clamp(panX || 0, -1, 1) * maxDx, 0, sw - cw);
+        const sy = clamp((sh - ch) / 2 - clamp(panY || 0, -1, 1) * maxDy, 0, sh - ch);
+
+        const c = mkCanvas(outW, outH);
+        const x = c.getContext("2d");
+        x.imageSmoothingEnabled = true;
+        x.imageSmoothingQuality = "high";
+        x.drawImage(srcCanvas, sx, sy, cw, ch, 0, 0, outW, outH);
+        return c;
+    }
+
+    /** gambar sumber video langsung ke kotak (dx, dy, dw, dh) secara cover */
     function drawCoverInto(ctx, src, sw, sh, dx, dy, dw, dh, mirror) {
         if (!sw || !sh) return;
         const targetAr = dw / dh;
@@ -61,9 +108,9 @@
         ctx.restore();
     }
 
-    function applyFilter(raw, name, outW, outH) {
+    function applyFilter(croppedCanvas, name, outW, outH) {
         const c = mkCanvas(outW, outH), x = c.getContext("2d");
-        x.drawImage(raw, 0, 0, outW, outH);
+        x.drawImage(croppedCanvas, 0, 0, outW, outH);
         const f = FILTERS[name];
         if (!f || !Object.keys(f).length) return c;
         const img = x.getImageData(0, 0, outW, outH), d = img.data;
@@ -108,10 +155,8 @@
             ctx.clip();
 
             if (p && !(hasLiveVideo && isActiveSlot && counting)) {
-                // Gambar foto yang sudah diambil untuk slot ini
                 ctx.drawImage(p.filtered, s.x - 3, s.y - 3, s.w + 6, s.h + 6);
             } else if (hasLiveVideo && (isActiveSlot || !p)) {
-                // Tampilkan live feed kamera langsung di dalam jendela frame!
                 drawCoverInto(
                     ctx,
                     el.video,
@@ -128,7 +173,6 @@
                     ctx.fillRect(s.x - 3, s.y - 3, s.w + 6, s.h + 6);
                 }
             } else {
-                // Latar langit & bukit lembut khas Star Champs Air saat kamera belum aktif
                 const g = ctx.createLinearGradient(0, s.y, 0, s.y + s.h);
                 g.addColorStop(0, "#cfe6ff");
                 g.addColorStop(0.68, "#eaf4ff");
@@ -137,7 +181,6 @@
                 ctx.fillStyle = g;
                 ctx.fillRect(s.x - 3, s.y - 3, s.w + 6, s.h + 6);
 
-                // Awan putih lembut di dalam slot
                 ctx.fillStyle = "rgba(255,255,255,0.9)";
                 const cx = s.x + s.w * 0.5, cy = s.y + s.h * 0.28;
                 ctx.beginPath();
@@ -160,13 +203,11 @@
             }
             ctx.restore();
 
-            // Garis tepi slot (highlight slot aktif saat mode preview)
-            ctx.strokeStyle = isLivePreview && isActiveSlot && !p ? "#013375" : F.border;
-            ctx.lineWidth = isLivePreview && isActiveSlot && !p ? 6 : 4;
+            ctx.strokeStyle = isLivePreview && isActiveSlot ? "#013375" : F.border;
+            ctx.lineWidth = isLivePreview && isActiveSlot ? 6 : 4;
             ctx.strokeRect(s.x + 2, s.y + 2, s.w - 4, s.h - 4);
         });
 
-        // Gambar layer frame Star Champs Air (dengan stiker & KRWC001) di atas semua foto
         if (frameReady) ctx.drawImage(frameImg, 0, 0, F.width, F.height);
     }
 
@@ -204,25 +245,109 @@
         }
     }
 
-    /* ---------- state foto ---------- */
-    function setPhoto(idx, raw) {
+    /* ---------- state foto, crop & move ---------- */
+    function rebuildPhotoSlot(idx) {
+        const p = photos[idx];
+        if (!p) return;
         const s = F.slots[idx];
-        photos[idx] = { raw, filtered: applyFilter(raw, filter, s.w, s.h) };
+        p.cropped = cropFromSource(p.src, p.zoom, p.panX, p.panY, s.w, s.h);
+        p.filtered = applyFilter(p.cropped, filter, s.w, s.h);
         drawThumb(idx);
+    }
+
+    function setPhoto(idx, srcCanvas) {
+        photos[idx] = {
+            src: srcCanvas,
+            zoom: 1,
+            panX: 0,
+            panY: 0,
+            cropped: null,
+            filtered: null
+        };
+        rebuildPhotoSlot(idx);
+        updateSlotTools();
         queueRender();
     }
 
     function clearPhoto(idx) {
         photos[idx] = null;
         drawThumb(idx);
+        // Langsung pilih slot yang baru dihapus agar upload/jepret berikutnya mengisi slot kosong ini!
+        selectSlot(idx);
+        updateButtons();
         queueRender();
+    }
+
+    /** Pindahkan atau tukar foto dari slot aktif ke slot target */
+    function movePhotoTo(targetIdx) {
+        if (targetIdx < 0 || targetIdx >= PER || targetIdx === active) return;
+        if (!photos[active] && !photos[targetIdx]) {
+            selectSlot(targetIdx);
+            return;
+        }
+        const temp = photos[targetIdx];
+        photos[targetIdx] = photos[active];
+        photos[active] = temp;
+
+        if (photos[active]) rebuildPhotoSlot(active);
+        else drawThumb(active);
+
+        if (photos[targetIdx]) rebuildPhotoSlot(targetIdx);
+        else drawThumb(targetIdx);
+
+        selectSlot(targetIdx);
+        updateButtons();
+        SC.audio.flip();
+        SC.toast(temp ? `Foto ditukar dengan Pose ${targetIdx + 1}` : `Foto dipindahkan ke Pose ${targetIdx + 1}`);
+    }
+
+    function setCropZoom(newZoom) {
+        const p = photos[active];
+        if (!p) return;
+        p.zoom = clamp(newZoom, 1, 2.8);
+        rebuildPhotoSlot(active);
+        updateSlotTools();
+        queueRender();
+    }
+
+    function adjustCropPan(dx, dy) {
+        const p = photos[active];
+        if (!p) return;
+        // Jika gambar memiliki rasio persis sama dengan slot dan zoom masih 1, naikkan sedikit zoom agar bisa digeser
+        const sw = p.src.width, sh = p.src.height;
+        const s = F.slots[active];
+        const targetAr = s.w / s.h;
+        let baseW = sw, baseH = sw / targetAr;
+        if (baseH > sh) { baseH = sh; baseW = sh * targetAr; }
+        if (p.zoom < 1.15) {
+            const needX = Math.abs(dx) > 0 && (sw - baseW / p.zoom) < sw * 0.08;
+            const needY = Math.abs(dy) > 0 && (sh - baseH / p.zoom) < sh * 0.08;
+            if (needX || needY) p.zoom = 1.2;
+        }
+        p.panX = clamp(p.panX + dx, -1, 1);
+        p.panY = clamp(p.panY + dy, -1, 1);
+        rebuildPhotoSlot(active);
+        updateSlotTools();
+        queueRender();
+    }
+
+    function resetCrop() {
+        const p = photos[active];
+        if (!p) return;
+        p.zoom = 1;
+        p.panX = 0;
+        p.panY = 0;
+        rebuildPhotoSlot(active);
+        updateSlotTools();
+        queueRender();
+        SC.audio.tap();
     }
 
     function refilterAll() {
         photos.forEach((p, i) => {
             if (p) {
                 const s = F.slots[i];
-                p.filtered = applyFilter(p.raw, filter, s.w, s.h);
+                p.filtered = applyFilter(p.cropped, filter, s.w, s.h);
                 drawThumb(i);
             }
         });
@@ -242,19 +367,52 @@
         }
     }
 
+    function updateSlotTools() {
+        if (!el.slotTools) return;
+        const p = photos[active];
+        el.slotTools.classList.toggle("is-empty", !p);
+        if (el.slotEditLabel) {
+            el.slotEditLabel.textContent = `ATUR POSE ${active + 1}` + (p ? "" : " (KOSONG)");
+        }
+        if (el.slotUploadLabel) {
+            el.slotUploadLabel.textContent = p ? `Ganti Foto Pose ${active + 1}` : `Upload ke Pose ${active + 1}`;
+        }
+        const zPct = p ? Math.round(p.zoom * 100) : 100;
+        if (el.cropZoom) el.cropZoom.value = String(zPct);
+        if (el.cropZoomVal) el.cropZoomVal.textContent = zPct + "%";
+
+        if (el.moveBtns) {
+            el.moveBtns.forEach((btn) => {
+                const t = Number(btn.dataset.moveTo);
+                btn.disabled = !p || t === active;
+                if (t === active) {
+                    btn.textContent = `Pose ${t + 1} (Aktif)`;
+                } else if (photos[t]) {
+                    btn.textContent = `Tukar ⇄ Pose ${t + 1}`;
+                } else {
+                    btn.textContent = `Pindah → Pose ${t + 1}`;
+                }
+            });
+        }
+    }
+
     function selectSlot(i) {
-        active = i;
-        el.shots.forEach((b, k) => b.classList.toggle("is-active", k === i));
-        el.chip.textContent = "Pose " + (i + 1) + " / " + PER;
+        active = clamp(i, 0, PER - 1);
+        el.shots.forEach((b, k) => b.classList.toggle("is-active", k === active));
+        el.chip.textContent = "Pose " + (active + 1) + " / " + PER;
+        updateSlotTools();
         queueRender();
     }
 
     function nextSlot() {
+        // Prioritaskan mencari slot yang masih kosong
         for (let k = 1; k <= PER; k++) {
             const n = (active + k) % PER;
             if (!photos[n]) return selectSlot(n);
         }
-        selectSlot((active + 1) % PER);
+        // Jika semua slot sudah terisi, tetap di slot yang baru saja diisi agar mudah di-crop/atur
+        updateSlotTools();
+        queueRender();
     }
 
     /* ---------- kamera ---------- */
@@ -322,7 +480,7 @@
         el.flash.classList.remove("is-on");
         void el.flash.offsetWidth;
         el.flash.classList.add("is-on");
-        setPhoto(idx, coverCrop(v, v.videoWidth, v.videoHeight, facing === "user"));
+        setPhoto(idx, captureSource(v, v.videoWidth, v.videoHeight, facing === "user"));
     }
 
     async function countdown(n) {
@@ -353,9 +511,12 @@
             return;
         }
         if (!stream && !(await startCamera())) return;
+        // Jika slot aktif sudah terisi dan masih ada slot kosong, arahkan ke slot kosong?
+        // Tidak, tombol mengatakan "Jepret Pose (active+1)", jadi memotret di slot active.
         if (await countdown(3)) {
             shoot(active);
             nextSlot();
+            updateButtons();
             SC.fx.burst(24, centerOf(el.vf));
         }
     }
@@ -370,7 +531,8 @@
         if (!stream && !(await startCamera())) return;
         session = true;
         updateButtons();
-        photos.forEach((_, i) => clearPhoto(i));
+        for (let i = 0; i < PER; i++) photos[i] = null;
+        for (let i = 0; i < PER; i++) drawThumb(i);
         for (let i = 0; i < PER && session; i++) {
             selectSlot(i);
             if (!(await countdown(3)) || !session) break;
@@ -392,7 +554,7 @@
         return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     }
 
-    /* ---------- upload ---------- */
+    /* ---------- upload (pintar mengisi slot yang kosong / target) ---------- */
     function loadImage(file) {
         return new Promise((res, rej) => {
             const url = URL.createObjectURL(file), im = new Image();
@@ -402,25 +564,65 @@
         });
     }
 
+    /** Urutan slot target saat pengguna menekan tombol "Upload Foto" utama */
+    function getSmartUploadOrder() {
+        const order = [];
+        // 1. Jika slot aktif sedang kosong, utamakan slot aktif terlebih dahulu
+        if (!photos[active]) order.push(active);
+        // 2. Masukkan semua slot lain yang masih kosong (agar tidak menimpa Pose 1 bila ada yang kosong!)
+        for (let k = 0; k < PER; k++) {
+            if (!photos[k] && !order.includes(k)) order.push(k);
+        }
+        // 3. Baru masukkan slot yang sudah terisi mulai dari active
+        for (let k = 0; k < PER; k++) {
+            const idx = (active + k) % PER;
+            if (!order.includes(idx)) order.push(idx);
+        }
+        return order;
+    }
+
     async function onUpload(e) {
         const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith("image/")).slice(0, PER);
         e.target.value = "";
         if (!files.length) return;
-        let i = active, ok = 0;
-        for (const f of files) {
+
+        const targetOrder = getSmartUploadOrder();
+        let lastFilled = active, ok = 0;
+
+        for (let k = 0; k < files.length; k++) {
+            const slotIdx = targetOrder[k % PER];
             try {
-                const im = await loadImage(f);
-                setPhoto(i, coverCrop(im, im.naturalWidth, im.naturalHeight, false));
-                i = (i + 1) % PER;
+                const im = await loadImage(files[k]);
+                setPhoto(slotIdx, captureSource(im, im.naturalWidth, im.naturalHeight, false));
+                lastFilled = slotIdx;
                 ok++;
             } catch (err) {
                 SC.toast("Salah satu foto tidak bisa dibaca.");
             }
         }
         if (ok) {
-            selectSlot(i);
+            // Pilih slot yang baru saja diisi supaya pengguna bisa langsung crop / geser fotonya!
+            selectSlot(lastFilled);
+            updateButtons();
             SC.audio.chime();
-            SC.toast("Foto berhasil masuk ke dalam frame!");
+            SC.toast(`Foto masuk ke Pose ${lastFilled + 1}. Silakan atur crop atau posisi.`);
+        }
+    }
+
+    /** Upload khusus untuk mengganti/mengisi slot aktif saat ini */
+    async function onUploadSingleSlot(e) {
+        const file = (e.target.files || [])[0];
+        e.target.value = "";
+        if (!file || !file.type.startsWith("image/")) return;
+        try {
+            const im = await loadImage(file);
+            setPhoto(active, captureSource(im, im.naturalWidth, im.naturalHeight, false));
+            selectSlot(active);
+            updateButtons();
+            SC.audio.chime();
+            SC.toast(`Pose ${active + 1} berhasil diperbarui!`);
+        } catch (err) {
+            SC.toast("Foto tidak bisa dibaca.");
         }
     }
 
@@ -559,7 +761,10 @@
     function reset() {
         session = false;
         counting = false;
-        photos.forEach((_, i) => clearPhoto(i));
+        for (let i = 0; i < PER; i++) {
+            photos[i] = null;
+            drawThumb(i);
+        }
         selectSlot(0);
         updateButtons();
     }
@@ -581,21 +786,88 @@
         el.shotBtn.querySelector("span").textContent = counting ? "Batalkan" : "Jepret Pose " + (active + 1);
     }
 
-    /* ---------- Klik langsung pada jendela slot di Frame Preview ---------- */
-    function onPreviewClick(e) {
+    /* ---------- Klik & Drag langsung pada jendela slot di Frame Preview ---------- */
+    function hitSlot(clientX, clientY) {
         const rect = el.preview.getBoundingClientRect();
-        const px = ((e.clientX - rect.left) / rect.width) * F.width;
-        const py = ((e.clientY - rect.top) / rect.height) * F.height;
+        const px = ((clientX - rect.left) / rect.width) * F.width;
+        const py = ((clientY - rect.top) / rect.height) * F.height;
         for (let k = 0; k < F.slots.length; k++) {
             const s = F.slots[k];
             if (px >= s.x && px <= s.x + s.w && py >= s.y && py <= s.y + s.h) {
-                const slotIdx = k % PER;
-                selectSlot(slotIdx);
-                updateButtons();
-                SC.audio.tap();
-                return;
+                return { slotIdx: k % PER, slot: s, rect };
             }
         }
+        return null;
+    }
+
+    function onPreviewPointerDown(e) {
+        const hit = hitSlot(e.clientX, e.clientY);
+        if (!hit) return;
+        const { slotIdx, slot, rect } = hit;
+        if (slotIdx !== active) {
+            selectSlot(slotIdx);
+            updateButtons();
+            SC.audio.tap();
+        }
+        const p = photos[slotIdx];
+        if (!p) return;
+
+        // Pastikan gambar punya ruang geser bila user mulai men-drag
+        const sw = p.src.width, sh = p.src.height;
+        const targetAr = slot.w / slot.h;
+        let baseW = sw, baseH = sw / targetAr;
+        if (baseH > sh) { baseH = sh; baseW = sh * targetAr; }
+
+        dragState = {
+            pointerId: e.pointerId,
+            slotIdx,
+            startX: e.clientX,
+            startY: e.clientY,
+            startPanX: p.panX,
+            startPanY: p.panY,
+            scaleX: (rect.width * (slot.w / F.width)) * 0.45,
+            scaleY: (rect.height * (slot.h / F.height)) * 0.45,
+            moved: false,
+            tightAr: (sw - baseW) < sw * 0.05 && (sh - baseH) < sh * 0.05
+        };
+        try { el.preview.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    }
+
+    function onPreviewPointerMove(e) {
+        if (!dragState || e.pointerId !== dragState.pointerId) return;
+        const dxPx = e.clientX - dragState.startX;
+        const dyPx = e.clientY - dragState.startY;
+        if (!dragState.moved && Math.hypot(dxPx, dyPx) < 4) return;
+        dragState.moved = true;
+        e.preventDefault();
+
+        const p = photos[dragState.slotIdx];
+        if (!p) return;
+        if (dragState.tightAr && p.zoom < 1.15) {
+            p.zoom = 1.2;
+        }
+        p.panX = clamp(dragState.startPanX + dxPx / Math.max(40, dragState.scaleX), -1, 1);
+        p.panY = clamp(dragState.startPanY + dyPx / Math.max(40, dragState.scaleY), -1, 1);
+        rebuildPhotoSlot(dragState.slotIdx);
+        updateSlotTools();
+        queueRender();
+    }
+
+    function onPreviewPointerUp(e) {
+        if (!dragState || e.pointerId !== dragState.pointerId) return;
+        try { el.preview.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        dragState = null;
+    }
+
+    function onPreviewWheel(e) {
+        const hit = hitSlot(e.clientX, e.clientY);
+        if (!hit) return;
+        const p = photos[hit.slotIdx];
+        if (!p) return;
+        e.preventDefault();
+        if (hit.slotIdx !== active) selectSlot(hit.slotIdx);
+        const delta = e.deltaY < 0 ? 0.1 : -0.1;
+        setCropZoom(p.zoom + delta);
     }
 
     /* ---------- init ---------- */
@@ -617,17 +889,54 @@
         el.filterBtns = SC.$$("[data-filter]", root);
         el.preview = SC.$("#previewCanvas");
 
+        el.slotTools = SC.$("#slotTools");
+        el.slotEditLabel = SC.$("#slotEditLabel");
+        el.slotUploadLabel = SC.$("#slotUploadLabel");
+        el.cropZoom = SC.$("#cropZoom");
+        el.cropZoomVal = SC.$("#cropZoomVal");
+        el.moveBtns = SC.$$("[data-move-to]", root);
+        el.panBtns = SC.$$("[data-pan]", root);
+
         root.style.setProperty("--slot-ar", AR.toFixed(4));
         el.preview.width = F.width;
         el.preview.height = F.height;
-        el.preview.style.cursor = "pointer";
-        el.preview.addEventListener("click", onPreviewClick);
+        el.preview.style.cursor = "grab";
+        el.preview.addEventListener("pointerdown", onPreviewPointerDown);
+        el.preview.addEventListener("pointermove", onPreviewPointerMove);
+        el.preview.addEventListener("pointerup", onPreviewPointerUp);
+        el.preview.addEventListener("pointercancel", onPreviewPointerUp);
+        el.preview.addEventListener("wheel", onPreviewWheel, { passive: false });
 
         el.camBtn.addEventListener("click", startCamera);
         el.flipBtn.addEventListener("click", flip);
         el.sessionBtn.addEventListener("click", runSession);
         el.shotBtn.addEventListener("click", singleShot);
         SC.$("#btnUpload").addEventListener("change", onUpload);
+        SC.$("#btnUploadSlot").addEventListener("change", onUploadSingleSlot);
+        SC.$("#btnCropReset").addEventListener("click", resetCrop);
+        SC.$("#btnZoomOut").addEventListener("click", () => {
+            const p = photos[active];
+            if (p) setCropZoom(p.zoom - 0.15);
+        });
+        SC.$("#btnZoomIn").addEventListener("click", () => {
+            const p = photos[active];
+            if (p) setCropZoom(p.zoom + 0.15);
+        });
+        el.cropZoom.addEventListener("input", () => {
+            setCropZoom(Number(el.cropZoom.value) / 100);
+        });
+        el.panBtns.forEach((b) => {
+            b.addEventListener("click", () => {
+                const [dx, dy] = b.dataset.pan.split(",").map(Number);
+                adjustCropPan(dx, dy);
+            });
+        });
+        el.moveBtns.forEach((b) => {
+            b.addEventListener("click", () => {
+                movePhotoTo(Number(b.dataset.moveTo));
+            });
+        });
+
         SC.$("#btnDl").addEventListener("click", downloadStrip);
         SC.$("#btnStory").addEventListener("click", downloadStory);
         SC.$("#btnShare").addEventListener("click", share);
@@ -636,6 +945,7 @@
         el.shots.forEach((b, i) => {
             b.addEventListener("click", (e) => {
                 if (e.target.closest(".shot__clear")) {
+                    e.stopPropagation();
                     clearPhoto(i);
                     return;
                 }

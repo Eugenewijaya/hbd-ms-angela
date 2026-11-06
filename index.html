@@ -418,10 +418,10 @@
                         </div>
                     </div>
 
-                    <!-- Tray 3 Pose -->
+                    <!-- Tray 3 Pose + Crop & Move Frame -->
                     <div class="booth__box">
                         <div class="booth__label">
-                            <span>SLOT POSE (KETUK UNTUK PILIH / GANTI)</span>
+                            <span>SLOT POSE (KETUK UNTUK PILIH / HAPUS)</span>
                             <button id="btnReset" type="button" class="chip">Reset Semua</button>
                         </div>
                         <div class="tray">
@@ -440,6 +440,56 @@
                                 <span class="shot__plus">Pose 3</span>
                                 <span class="shot__clear" title="Hapus foto 3"><svg aria-hidden="true"><use href="#i-close"/></svg></span>
                             </button>
+                        </div>
+
+                        <!-- Panel Crop, Geser & Pindah Slot Frame -->
+                        <div id="slotTools" class="slot-tools">
+                            <div class="slot-tools__head">
+                                <strong id="slotEditLabel">ATUR POSE 1</strong>
+                                <div class="slot-tools__actions">
+                                    <label for="btnUploadSlot" class="chip chip--action">
+                                        <svg aria-hidden="true" width="12" height="12"><use href="#i-upload"/></svg>
+                                        <span id="slotUploadLabel">Isi / Ganti Pose 1</span>
+                                    </label>
+                                    <input id="btnUploadSlot" class="sr-only" type="file" accept="image/*">
+                                    <button id="btnCropReset" type="button" class="chip">Reset Crop</button>
+                                </div>
+                            </div>
+
+                            <div class="slot-tools__row">
+                                <div class="slot-tools__sub">
+                                    <span>CROP &amp; ZOOM FOTO</span>
+                                    <b id="cropZoomVal">100%</b>
+                                </div>
+                                <div class="crop-zoom">
+                                    <button id="btnZoomOut" type="button" class="chip" aria-label="Perkecil zoom">&minus;</button>
+                                    <input id="cropZoom" class="crop-zoom__slider" type="range" min="100" max="280" step="5" value="100" aria-label="Zoom crop foto">
+                                    <button id="btnZoomIn" type="button" class="chip" aria-label="Perbesar zoom">&plus;</button>
+                                </div>
+                            </div>
+
+                            <div class="slot-tools__row">
+                                <div class="slot-tools__sub">
+                                    <span>GESER POSISI FOTO DI DALAM FRAME (ATAU DRAG LANGSUNG DI PREVIEW)</span>
+                                </div>
+                                <div class="crop-pan">
+                                    <button type="button" class="chip" data-pan="-0.14,0">&larr; Geser Kiri</button>
+                                    <button type="button" class="chip" data-pan="0,-0.14">&uarr; Geser Atas</button>
+                                    <button type="button" class="chip" data-pan="0,0.14">&darr; Geser Bawah</button>
+                                    <button type="button" class="chip" data-pan="0.14,0">Geser Kanan &rarr;</button>
+                                </div>
+                            </div>
+
+                            <div class="slot-tools__row">
+                                <div class="slot-tools__sub">
+                                    <span>PINDAHKAN HASIL FOTO KE SLOT FRAME LAIN</span>
+                                </div>
+                                <div class="slot-move">
+                                    <button type="button" class="chip" data-move-to="0">Pindah ke Pose 1</button>
+                                    <button type="button" class="chip" data-move-to="1">Pindah ke Pose 2</button>
+                                    <button type="button" class="chip" data-move-to="2">Pindah ke Pose 3</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

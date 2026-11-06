@@ -50,13 +50,99 @@
 .shot.is-filled .shot__clear { display: grid; }
 .shot__clear svg { width: 10px; height: 10px; }
 
+/* ---------- Panel Crop, Geser & Pindah Slot Frame ---------- */
+.slot-tools {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1.5px dashed var(--sky-400);
+    display: grid;
+    gap: 12px;
+}
+.slot-tools.is-empty .slot-tools__row {
+    opacity: .45;
+    pointer-events: none;
+}
+.slot-tools__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.slot-tools__head strong {
+    font-family: var(--font-mono);
+    font-size: .76rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--navy);
+}
+.slot-tools__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.chip--action {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--sky-200);
+    border-color: var(--navy);
+    color: var(--navy);
+    cursor: pointer;
+}
+.slot-tools__row {
+    display: grid;
+    gap: 6px;
+}
+.slot-tools__sub {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: .66rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+.slot-tools__sub b {
+    color: var(--navy);
+    font-weight: 700;
+}
+.crop-zoom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.crop-zoom__slider {
+    flex: 1;
+    accent-color: var(--navy);
+    cursor: pointer;
+}
+.crop-pan,
+.slot-move {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 6px;
+}
+.crop-pan .chip,
+.slot-move .chip {
+    text-align: center;
+    justify-content: center;
+    padding: .38rem .55rem;
+}
+.slot-move .chip[disabled] {
+    opacity: .4;
+    cursor: default;
+}
+
 /* ---------- Filter ---------- */
 .filters { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* ---------- Preview ---------- */
 .preview { position: sticky; top: calc(var(--nav-h) + 16px); display: grid; gap: 14px; }
 .preview__sheet { background: var(--white); padding: 10px; border: 2px solid var(--navy); border-radius: var(--radius); box-shadow: 5px 6px 0 var(--navy-900); }
-.preview__canvas { width: 100%; height: auto; aspect-ratio: 2 / 3; background: var(--paper); }
+.preview__canvas { width: 100%; height: auto; aspect-ratio: 2 / 3; background: var(--paper); user-select: none; -webkit-user-select: none; }
 .preview__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .preview__actions .btn--wide { grid-column: 1 / -1; }
 .preview__actions .btn { font-size: 1.02rem; padding-inline: .8rem; }
